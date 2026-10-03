@@ -186,6 +186,13 @@
   .mini-module{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#faf8f0;border-radius:8px;margin-bottom:8px;}
   .mini-module .t{font-weight:700;font-size:14px;}
   .request-card{border:1px solid #eee2c8;border-radius:10px;padding:14px;margin-bottom:12px;display:flex;gap:14px;flex-wrap:wrap;}
+  .ai-check{flex-basis:100%;border-radius:10px;background:#f7f9fc;border:1px solid #e3e8f0;padding:10px 12px;font-size:13px;line-height:1.9;color:#24324d;}
+  .ai-check .ai-row{display:flex;gap:6px;align-items:flex-start;}
+  .ai-check .ai-ok{color:#1d7a46;font-weight:700;}
+  .ai-check .ai-bad{color:#b3261e;font-weight:700;}
+  .ai-check .ai-warn{color:#9a6400;font-weight:700;}
+  .ai-check .ai-title{font-weight:700;margin-bottom:2px;}
+  .ai-check .ai-recheck{background:none;border:none;color:#2a5bd7;cursor:pointer;font-family:inherit;font-size:12px;padding:0;margin-top:4px;}
   .request-card img{width:130px;height:95px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;}
   .request-info{flex:1;min-width:160px;}
   .request-info .name{font-weight:700;font-size:15px;}
@@ -2731,6 +2738,187 @@ async function getLectureScript(m){
   return script;
 }
 
+/* ================= الفحص التلقائي لطلبات الاشتراك (بالذكاء الاصطناعي) =================
+   Gemini بيقرا صورة البطاقة وإيصال الدفع ويطلّع منهم الرقم القومي والمبلغ، وبعدين
+   المنصة نفسها (مش الذكاء الاصطناعي) هي اللي بتقارن الأرقام دي بالمكتوب وبسعر
+   البرنامج - عشان المقارنة تبقى دقيقة 100% ومش مجرد "رأي". النتيجة بتتحفظ مع
+   الطلب، فالفحص بيحصل مرة واحدة بس لكل طلب (مش كل ما الصفحة تتفتح).
+   ده فحص مساعد: القبول أو الرفض لسه في إيد المحاضر، لأن صورة الإيصال لوحدها
+   ممكن تتزوّر، والتأكد النهائي إن الفلوس وصلت بيكون من كشف الحساب في البنك. */
+function toLatinDigits(str){
+  return String(str == null ? '' : str)
+    .replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+}
+function onlyDigits(str){ return toLatinDigits(str).replace(/\D/g, ''); }
+// فحص صيغة الرقم القومي المصري من غير ذكاء اصطناعي: 14 رقم، أول رقم 2 أو 3
+// (القرن)، وبعده تاريخ ميلاد سليم.
+function checkEgyptianNationalIdFormat(id){
+  const d = onlyDigits(id);
+  if(d.length !== 14) return { ok:false, reason:'الرقم مش 14 رقم' };
+  const c = d[0];
+  if(c !== '2' && c !== '3') return { ok:false, reason:'أول رقم لازم يكون 2 أو 3' };
+  const year = (c === '2' ? 1900 : 2000) + parseInt(d.slice(1,3), 10);
+  const month = parseInt(d.slice(3,5), 10), day = parseInt(d.slice(5,7), 10);
+  const dt = new Date(year, month - 1, day);
+  if(month < 1 || month > 12 || dt.getMonth() !== month - 1 || dt.getDate() !== day) return { ok:false, reason:'تاريخ الميلاد اللي جوه الرقم مش سليم' };
+  if(dt > new Date()) return { ok:false, reason:'تاريخ الميلاد اللي جوه الرقم في المستقبل' };
+  return { ok:true, birth: `${day}/${month}/${year}` };
+}
+function dataUrlToInlinePart(url){
+  const m = /^data:([^;,]+);base64,(.*)$/.exec(url || '');
+  return m ? { inline_data: { mime_type: m[1], data: m[2] } } : null;
+}
+async function callGeminiWithImages(system, parts, maxTokens){
+  const workerUrl = (state.aiSettings && state.aiSettings.workerUrl) || '';
+  if(!workerUrl) throw new Error('رابط سيرفر الذكاء الاصطناعي مش متحط في "⚙️ صوت AI".');
+  const once = async () => {
+    const response = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts }],
+        generationConfig: { maxOutputTokens: maxTokens || 1500, temperature: 0 }
+      })
+    });
+    let data = null;
+    try{ data = await response.json(); }catch(e){}
+    if(!response.ok || (data && data.error)){
+      const detail = (data && data.error && data.error.message) || (response.status + ' ' + response.statusText);
+      const err = new Error(detail);
+      err.busy = response.status === 503 || response.status === 429 || /overloaded|quota|rate limit|resource_exhausted|unavailable/i.test(detail);
+      throw err;
+    }
+    const cand = data && data.candidates && data.candidates[0];
+    const text = ((cand && cand.content && cand.content.parts) || []).map(x => x.text || '').join('\n').trim();
+    if(!text) throw new Error('مفيش رد');
+    return text;
+  };
+  try{ return await once(); }
+  catch(e){
+    if(e && e.busy){ await new Promise(r => setTimeout(r, 6000)); return await once(); }
+    throw e;
+  }
+}
+async function runRequestAiCheck(r, p){
+  const profile = state.traineeProfiles.find(t => t.id === r.traineeId);
+  const idImg = profile ? profile.nationalIdImage : null;
+  const parts = [];
+  const idPart = dataUrlToInlinePart(idImg);
+  const receiptPart = dataUrlToInlinePart(r.screenshotDataUrl);
+  if(idPart){ parts.push({ text: 'الصورة الأولى: صورة بطاقة الرقم القومي.' }); parts.push(idPart); }
+  if(receiptPart){ parts.push({ text: (idPart ? 'الصورة التانية' : 'الصورة') + ': اسكرين شوت إيصال الدفع / التحويل.' }); parts.push(receiptPart); }
+  if(!parts.length) throw new Error('مفيش صور في الطلب ده');
+  parts.push({ text: `طلّع البيانات دي من الصور بالظبط زي ما هي مكتوبة، ورجّع JSON بس من غير أي كلام تاني:
+{
+ "id_card_found": true/false (هل فيه صورة بطاقة رقم قومي مصرية فعلًا),
+ "id_number": "الرقم القومي اللي في البطاقة (14 رقم) أو null لو مش واضح",
+ "id_name": "الاسم المكتوب في البطاقة أو null",
+ "receipt_found": true/false (هل الصورة إيصال دفع أو تحويل فلوس فعلًا),
+ "receipt_amount": رقم المبلغ اللي اتحوّل (رقم بس) أو null,
+ "receipt_currency": "العملة أو null",
+ "receipt_account": "رقم حساب أو موبايل المستلم الظاهر في الإيصال أو null",
+ "receipt_date": "تاريخ العملية أو null",
+ "notes": "أي ملاحظة مهمة باختصار (زي إن الصورة مش واضحة أو شكلها متعدل) أو null"
+}
+لو حاجة مش ظاهرة أو مش متأكد منها، حط null وماتخمّنش.` });
+  const raw = await callGeminiWithImages('أنت مساعد دقيق بيقرا مستندات مصرية (بطاقات رقم قومي وإيصالات تحويل بنكي أو محافظ إلكترونية). بترجّع JSON بس.', parts, 1200);
+  const x = extractJson(raw) || {};
+  const res = { checkedAt: Date.now(), expectedCost: p.cost, raw: x };
+  // مقارنة الرقم القومي (بتعملها المنصة نفسها رقم برقم)
+  const typedId = onlyDigits(r.traineeNationalId);
+  const cardId = onlyDigits(x.id_number);
+  if(!idPart) res.id = { status: 'missing', text: 'المتدرب ما رفعش صورة بطاقة.' };
+  else if(x.id_card_found === false) res.id = { status: 'bad', text: 'الصورة اللي اترفعت مش باينة إنها بطاقة رقم قومي.' };
+  else if(!cardId) res.id = { status: 'warn', text: 'الرقم في البطاقة مش واضح، راجعيه بعينك.' };
+  else if(!typedId) res.id = { status: 'warn', text: `المتدرب ما كتبش رقم قومي. الرقم اللي في البطاقة: ${cardId}` };
+  else if(cardId === typedId) res.id = { status: 'ok', text: `الرقم القومي مطابق للبطاقة (${typedId})` };
+  else {
+    let diff = 0; for(let i=0;i<Math.max(cardId.length,typedId.length);i++) if(cardId[i] !== typedId[i]) diff++;
+    res.id = { status: diff <= 1 && cardId.length === typedId.length ? 'warn' : 'bad',
+      text: `الرقم مش مطابق: المكتوب ${typedId} - اللي في البطاقة ${cardId}` + (diff <= 1 ? ' (فرق رقم واحد، ممكن يكون خطأ في القراءة - راجعيه)' : '') };
+  }
+  // اسم البطاقة مقابل اسم التسجيل (تنبيه بس، لأن الأسماء بتتكتب بأشكال مختلفة)
+  if(x.id_name){
+    const norm = t => String(t||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[^ء-يa-z\s]/gi,'').trim().split(/\s+/).filter(Boolean);
+    const a = norm(r.traineeName), b = norm(x.id_name);
+    const common = a.filter(w => b.includes(w)).length;
+    res.name = common >= Math.min(2, a.length)
+      ? { status: 'ok', text: `الاسم في البطاقة: ${x.id_name}` }
+      : { status: 'warn', text: `الاسم في البطاقة (${x.id_name}) مختلف عن اسم التسجيل (${r.traineeName})` };
+  }
+  // مقارنة المبلغ بسعر البرنامج
+  const amount = x.receipt_amount == null ? null : parseFloat(toLatinDigits(String(x.receipt_amount)).replace(/[^\d.]/g,''));
+  if(!receiptPart) res.amount = { status: 'missing', text: 'مفيش إيصال.' };
+  else if(x.receipt_found === false) res.amount = { status: 'bad', text: 'الصورة اللي اترفعت مش باينة إنها إيصال دفع.' };
+  else if(amount == null || isNaN(amount)) res.amount = { status: 'warn', text: 'المبلغ في الإيصال مش واضح، راجعيه بعينك.' };
+  else if(Math.abs(amount - p.cost) < 0.5) res.amount = { status: 'ok', text: `المبلغ مطابق لسعر البرنامج (${p.cost} ج.م)` };
+  else if(amount > p.cost) res.amount = { status: 'warn', text: `المبلغ في الإيصال ${amount} أكبر من سعر البرنامج ${p.cost} ج.م` };
+  else res.amount = { status: 'bad', text: `المبلغ ناقص: الإيصال ${amount} - وسعر البرنامج ${p.cost} ج.م` };
+  // حساب المستلم مقابل حساب المركز
+  const acc = onlyDigits(state.bankAccount && state.bankAccount.accountNumber);
+  const recAcc = onlyDigits(x.receipt_account);
+  if(acc && recAcc && recAcc.length >= 4){
+    const tail = s2 => s2.slice(-4);
+    res.account = (acc.includes(recAcc) || recAcc.includes(acc) || tail(acc) === tail(recAcc))
+      ? { status: 'ok', text: 'التحويل رايح لحساب المركز' }
+      : { status: 'bad', text: `رقم الحساب في الإيصال (${recAcc}) مش هو حساب المركز` };
+  }
+  if(x.notes) res.notes = String(x.notes);
+  return res;
+}
+function renderAiCheckHtml(r, p){
+  const nid = r.traineeNationalId ? checkEgyptianNationalIdFormat(r.traineeNationalId) : null;
+  const icon = st => st === 'ok' ? '<span class="ai-ok">✔</span>' : st === 'bad' ? '<span class="ai-bad">✖</span>' : '<span class="ai-warn">⚠</span>';
+  let rows = '';
+  if(nid) rows += `<div class="ai-row">${icon(nid.ok?'ok':'bad')}<span>${nid.ok ? 'صيغة الرقم القومي سليمة (تاريخ الميلاد ' + nid.birth + ')' : 'صيغة الرقم القومي غلط: ' + nid.reason}</span></div>`;
+  const c = r.aiCheck;
+  if(window.__aiChecking && window.__aiChecking[r.id]){
+    rows += `<div class="ai-row"><span>⏳ بيتم فحص البطاقة والإيصال تلقائيًا...</span></div>`;
+  } else if(c && c.error){
+    rows += `<div class="ai-row">${icon('warn')}<span>الفحص التلقائي ماشتغلش: ${escapeHtml(c.error)}</span></div>`;
+  } else if(c){
+    ['id','name','amount','account'].forEach(k => { if(c[k]) rows += `<div class="ai-row">${icon(c[k].status)}<span>${escapeHtml(c[k].text)}</span></div>`; });
+    if(c.raw && c.raw.receipt_date) rows += `<div class="ai-row"><span>📅 تاريخ التحويل في الإيصال: ${escapeHtml(String(c.raw.receipt_date))}</span></div>`;
+    if(c.notes) rows += `<div class="ai-row"><span>📝 ${escapeHtml(c.notes)}</span></div>`;
+    if(c.expectedCost !== p.cost) rows += `<div class="ai-row">${icon('warn')}<span>سعر البرنامج اتغيّر من وقت الفحص (كان ${c.expectedCost}) - اعملي إعادة فحص.</span></div>`;
+  }
+  return `<div class="ai-title">🤖 الفحص التلقائي</div>${rows || '<div class="hint">لسه ما اتفحصش.</div>'}
+    <div class="hint" style="margin:2px 0 0;">الفحص مساعد بس - اتأكدي من وصول المبلغ في كشف الحساب قبل القبول.</div>
+    <button class="ai-recheck" data-rid="${r.id}">🔄 إعادة الفحص</button>`;
+}
+async function startRequestAiChecks(el, p, force){
+  window.__aiChecking = window.__aiChecking || {};
+  const queue = state.requests.filter(r => r.programId === p.id && (force ? force === r.id : (r.status === 'pending' && !r.aiCheck)));
+  for(const r of queue){
+    if(window.__aiChecking[r.id]) continue;
+    window.__aiChecking[r.id] = true;
+    const box = () => document.getElementById('aicheck-' + r.id);
+    if(box()) box().innerHTML = renderAiCheckHtml(r, p);
+    try{
+      r.aiCheck = await runRequestAiCheck(r, p);
+    }catch(e){
+      console.error('AI check failed', e);
+      r.aiCheck = { error: (e && e.message) || 'خطأ غير معروف', checkedAt: Date.now() };
+    }
+    delete window.__aiChecking[r.id];
+    try{ await setDoc(doc(currentDb(), 'requests', r.id), r); }catch(e){ console.error(e); }
+    if(box()){ box().innerHTML = renderAiCheckHtml(r, p); bindAiRecheck(el, p); }
+  }
+}
+function bindAiRecheck(el, p){
+  el.querySelectorAll('.ai-recheck').forEach(b => {
+    if(b.__bound) return; b.__bound = true;
+    b.addEventListener('click', () => {
+      const r = state.requests.find(x => x.id === b.dataset.rid);
+      if(!r) return;
+      delete r.aiCheck;
+      startRequestAiChecks(el, p, r.id);
+    });
+  });
+}
+
 function renderRequestsTab(el, p){
   const list = state.requests.filter(r => r.programId === p.id).sort((a,b)=>b.submittedAt-a.submittedAt);
   if(!list.length){ el.innerHTML = `<div class="card"><div class="empty">لسه مفيش طلبات اشتراك على البرنامج ده.</div></div>`; return; }
@@ -2752,7 +2940,7 @@ function renderRequestsTab(el, p){
         <div class="meta">${escapeHtml(r.traineePhone)} · ${new Date(r.submittedAt).toLocaleString('ar-EG')}</div>
         ${r.traineeOrg ? `<div class="meta">الجهة: ${escapeHtml(r.traineeOrg)}</div>` : ''}
         ${r.traineeNationalId ? `<div class="meta" style="font-weight:700;">الرقم القومي المكتوب: ${escapeHtml(r.traineeNationalId)}</div>` : ''}
-        ${idImg ? `<div class="hint">قارني الرقم المكتوب فوق بالرقم الظاهر في صورة البطاقة جنبه.</div>` : `<div class="hint">المتدربة لسه ما رفعتش صورة بطاقة.</div>`}
+        ${idImg ? `<div class="hint">الفحص التلقائي تحت بيقارن الرقم المكتوب بالبطاقة لوحده.</div>` : `<div class="hint">المتدربة لسه ما رفعتش صورة بطاقة.</div>`}
         <div style="margin-top:8px;">
           <span class="badge ${r.status}">${r.status==='pending'?'قيد المراجعة':r.status==='approved'?'مقبول':'مرفوض'}</span>
           ${r.status==='approved' && r.manuallyLocked ? `<span class="badge rejected">مقفول يدويًا</span>` : ''}
@@ -2769,8 +2957,11 @@ function renderRequestsTab(el, p){
       ${r.status==='approved' ? `<div class="row" style="align-self:center;">
         <button class="btn ${r.manuallyLocked ? 'btn-primary' : 'btn-danger'} lock-toggle-btn" data-rid="${r.id}">${r.manuallyLocked ? 'إلغاء القفل' : 'قفل الوصول يدويًا'}</button>
       </div>` : ''}
+      <div class="ai-check" id="aicheck-${r.id}">${renderAiCheckHtml(r, p)}</div>
     </div>`;
   }).join('') + `</div>`;
+  bindAiRecheck(el, p);
+  startRequestAiChecks(el, p);
 
   el.querySelectorAll('.view-shot').forEach(img => img.addEventListener('click', () => window.open(img.dataset.full, '_blank')));
   el.querySelectorAll('.accept-btn').forEach(b => b.addEventListener('click', async () => {
