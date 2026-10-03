@@ -3994,12 +3994,32 @@ const INTRO_SCENES = [
   { visual: 'icons', icons: [['⏰','مرونة التعلم'],['📍','أي وقت ومكان'],['📈','متابعة وتقييم'],['🎓','شهادات معتمدة']], caption: "مرونة في التعلم... في أي وقت ومن أي مكان... متابعة وتقييم مستواك... وشهادات معتمدة تدعم مستقبلك." },
   { visual: 'headline', icon: '👥', headline: "كل متدرب مختلف", caption: "لأن كل متدرب مختلف... نقدّم لك تجربة تعلم مختلفة." },
   { visual: 'headline', icon: '🚀', headline: "عايز منصة زي دي لمركزك؟", caption: "ليه تبني منصة تدريب من الصفر؟ أي مركز أو أكاديمية تقدر تشترك في المنصة دي وتاخد نسختها الخاصة فورًا: برامجها، متدربينها، وتحكم كامل تحت إيدها هي بس، من غير ما تدفع تكلفة بناء منصة جديدة من الأول." },
-  { visual: 'headline', icon: '🚀', headline: "ابدأ الآن", caption: "ابدأ الآن... طوّر مهاراتك..." },
   { visual: 'logo', caption: "مرحبًا بك في المنصة الذكية التفاعلية للتدريب بمركز التميز العلمي والتكنولوجي." }
+];
+
+// صوت المقدمة المسجّل مسبقًا (Google AI Studio)، ملف mp3 لكل مشهد بنفس ترتيب
+// INTRO_SCENES بالظبط. الملفات مرفوعة على GitHub جنب ملف المنصة في نفس المكان
+// (مش جوه الملف نفسه، عشان حجمه يفضل صغير وGitHub يسمح بتعديله من المتصفح).
+// لو ملف منهم مش موجود، المشهد ده بيتقال بصوت المتصفح القديم كاحتياط. لو المشهد ليه ملف هنا، بيتشغل هو بدل صوت المتصفح.
+// لو غيّرتي نص أي مشهد أو ترتيبه، لازم ملفه هنا يتغيّر معاه.
+const INTRO_VOICE_SRCS = [
+  "intro-01.mp3",
+  "intro-02.mp3",
+  "intro-03.mp3",
+  "intro-04.mp3",
+  "intro-05.mp3",
+  "intro-06.mp3",
+  "intro-07.mp3",
+  "intro-08.mp3",
+  "intro-09.mp3",
+  "intro-10.mp3",
+  "intro-11.mp3"
 ];
 
 let introIndex = 0;
 let introAdvanceTimer = null;
+let introMusic = null;
+let introMusicDone = Promise.resolve();
 
 function renderIntroScene(idx){
   const scene = INTRO_SCENES[idx];
@@ -4020,10 +4040,59 @@ function renderIntroScene(idx){
   document.getElementById('introPrevBtn').disabled = idx === 0;
 }
 
-async function playIntroScene(idx){
+// بيشغّل ملف الصوت المسجّل للمشهد للآخر، وبعد ما يخلص بيستنى ثانية
+// واحدة وبعدين يقلب للمشهد اللي بعده - من غير أي حد أقصى للوقت، عشان
+// الكلام ميتقصّش أبدًا مهما كان المشهد طويل.
+async function playIntroRecordedScene(idx, waitForMusic){
+  const avatar = document.getElementById('introAvatar');
+  stopAllSpeech();
+  const myGen = speechGeneration;
+  const advance = () => {
+    if(myGen !== speechGeneration || introIndex !== idx) return;
+    avatar.classList.remove('speaking');
+    if(idx < INTRO_SCENES.length - 1) playIntroScene(idx + 1);
+    else finishIntro();
+  };
+  // أول مشهد بس: نستنى الموسيقى الافتتاحية تخلص الأول وبعدين نبدأ الكلام.
+  if(waitForMusic) await introMusicDone;
+  if(myGen !== speechGeneration || introIndex !== idx) return;
+  const audio = new Audio(INTRO_VOICE_SRCS[idx]);
+  audio.volume = 1;
+  currentAudio = audio;
+  audio.onended = () => { introAdvanceTimer = setTimeout(advance, 1000); };
+  audio.onerror = () => {
+    // الملف مش موجود أو مش راضي يشتغل: نرجع لصوت المتصفح للمشهد ده بس.
+    if(myGen !== speechGeneration || introIndex !== idx) return;
+    playIntroScene(idx, { forceBrowser: true });
+  };
+  const start = () => audio.play().then(() => {
+    avatar.classList.add('speaking');
+  });
+  try{
+    await start();
+  }catch(e){
+    // بعض المتصفحات بتمنع تشغيل الصوت تلقائيًا قبل ما المستخدم يلمس الصفحة
+    // (زي لما المقدمة تفتح لوحدها في زيارة تانية). في الحالة دي بنستنى أول
+    // لمسة/ضغطة في أي مكان وبنشغّل الصوت ساعتها من أول المشهد.
+    const retry = () => {
+      document.removeEventListener('pointerdown', retry, true);
+      document.removeEventListener('keydown', retry, true);
+      if(myGen !== speechGeneration || introIndex !== idx) return;
+      start().catch(() => { introAdvanceTimer = setTimeout(advance, 6000); });
+    };
+    document.addEventListener('pointerdown', retry, true);
+    document.addEventListener('keydown', retry, true);
+  }
+}
+
+async function playIntroScene(idx, opts){
   introIndex = idx;
   clearTimeout(introAdvanceTimer);
   renderIntroScene(idx);
+  if(INTRO_VOICE_SRCS[idx] && !(opts && opts.forceBrowser)){
+    playIntroRecordedScene(idx, !!(opts && opts.waitForMusic));
+    return;
+  }
   const avatar = document.getElementById('introAvatar');
   avatar.classList.add('speaking');
   const scene = INTRO_SCENES[idx];
@@ -4073,11 +4142,21 @@ function startIntro(){
   // لأن بعض المتصفحات بتمنع تشغيل صوت تلقائي من غير تفاعل مسبق من المستخدم؛
   // في الحالة دي المشهد بيكمل عادي من غير موسيقى بدل ما يوقف أو يدي خطأ.
   try{
+    if(introMusic){ introMusic.pause(); }
     const music = new Audio(INTRO_MUSIC_SRC);
+    introMusic = music;
     music.volume = 0.55;
-    music.play().catch(() => {});
-  }catch(e){ console.error(e); }
-  playIntroScene(0);
+    // الكلام بيبدأ بعد ما الموسيقى تخلص. لو الموسيقى اتمنعت أو حصل فيها خطأ،
+    // الكلام بيبدأ على طول؛ وفيه حد أقصى 25 ثانية كاحتياط.
+    introMusicDone = new Promise(resolve => {
+      const done = () => resolve();
+      music.addEventListener('ended', done, { once: true });
+      music.addEventListener('error', done, { once: true });
+      setTimeout(done, 25000);
+      music.play().catch(done);
+    });
+  }catch(e){ console.error(e); introMusicDone = Promise.resolve(); }
+  playIntroScene(0, { waitForMusic: true });
 }
 
 document.getElementById('introSkipBtn').addEventListener('click', finishIntro);
