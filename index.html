@@ -3212,7 +3212,8 @@ async function sendChatMessage(text){
 ${m.content}
 ---
 لو السؤال متعلق بالمحتوى ده، اشرحي بالتفصيل. لو السؤال عام أو برة نطاق الوحدة، جاوبي بأفضل ما تقدري ونبّهي بلطف إنه خارج محتوى الوحدة الحالية.
-مهم جدًا: اكتبي ردك كفقرات كلام عادي متصل، من غير أي رموز تنسيق خالص (من غير **، من غير ##، من غير نقط أو شرطات أول السطر زي - أو •). الرد ده بيتعرض كنص عادي وبيتقري بصوت مسموع كمان، فأي رمز من دول هيتقري بصوته الحرفي (زي "نجمة") ويبوّظ الكلام.`;
+مهم جدًا: اكتبي ردك كفقرات كلام عادي متصل، من غير أي رموز تنسيق خالص (من غير **، من غير ##، من غير نقط أو شرطات أول السطر زي - أو •). الرد ده بيتعرض كنص عادي وبيتقري بصوت مسموع كمان، فأي رمز من دول هيتقري بصوته الحرفي (زي "نجمة") ويبوّظ الكلام.
+كمان عشان الرد بيتقري بصوت مسموع: متستخدميش علامات تنصيص ولا أقواس ولا شرطة مائلة / ولا رموز زي % أو & أو = أو إيموجي، واكتبي الأرقام والنسب بالكلام لما يكون ممكن، وخلي الجمل قصيرة وطبيعية كأنك بتتكلمي مع المتدرب وجهًا لوجه.`;
   try{
     // نبعت آخر شوية رسائل من المحادثة (مش السؤال الأخير بس) عشان الذكاء الاصطناعي
     // يفتكر سياق الكلام اللي فات ويجاوب وهو "فاهم" المتدرب مش بس شايف سؤال منفصل.
@@ -3290,6 +3291,18 @@ async function pickArabicVoice(){
   // بعض متصفحات الموبايل (خصوصًا جوه WebView) بترد إنها اتقالت بنجاح من
   // غير ما تطلع أي صوت فعليًا - ده أكتر سبب واقعي للصمت اللي بيحصل رغم إن
   // الكود مش بيرمي أي خطأ.
+  // الأصوات "الطبيعية" (Natural/Neural) - زي Microsoft Salma وShakir (عربي مصري)
+  // في متصفح Edge - مجانية وصوتها قريب جدًا من صوت إنسان، فبنفضّلها الأول.
+  // لو اتضح إنها مش شغالة على الجهاز ده (صامتة)، speakBrowser بيعلّم عليها
+  // (__naturalVoiceBroken) ونرجع للترتيب القديم.
+  const naturalPattern = wantsFemale ? /salma|zariyah|amany|fatima|hoda|female/i : /shakir|hamed|omar|male/i;
+  const isNatural = v => /natural|neural|online/i.test(v.name);
+  const naturalVoices = window.__naturalVoiceBroken ? [] : arabicVoices.filter(isNatural);
+  const preferredNatural = naturalVoices.find(v => /eg/i.test(v.lang) && naturalPattern.test(v.name))
+    || naturalVoices.find(v => naturalPattern.test(v.name))
+    || naturalVoices.find(v => /eg/i.test(v.lang))
+    || naturalVoices[0];
+  if(preferredNatural){ arabicVoice = preferredNatural; return; }
   const preferred = arabicVoices.find(v => v.localService && genderPattern.test(v.name))
     || arabicVoices.find(v => v.localService)
     || arabicVoices.find(v => genderPattern.test(v.name))
@@ -3345,7 +3358,36 @@ function stripFormattingForSpeech(text){
     .replace(/^\s*[-•●◦*]\s+/gm, '')   // - نقطة قائمة أول السطر -> تتشال
     .replace(/`([^`]*)`/g, '$1')       // `كود` -> كود
     .replace(/[*_~`#]/g, '')           // أي رمز تنسيق متبقي بره الحالات فوق
+    // روابط وإيميلات: مفيش داعي تتقري حرف حرف
+    .replace(/https?:\/\/\S+|www\.\S+/gi, '')
+    .replace(/\S+@\S+\.\S+/g, '')
+    // إيموجي ورموز زخرفية (أسهم، نجوم، علامات صح...)
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '')
+    // ترقيم القوايم أول السطر (1. أو 1- أو ١) أو أ-)
+    .replace(/^\s*[0-9٠-٩]{1,2}\s*[.)\-–]\s+/gm, '')
+    .replace(/^\s*[أ-ي]\s*[)\-–]\s+/gm, '')
+    // علامات التنصيص والأقواس: نسيب الكلام اللي جواها ونشيل العلامة نفسها
+    .replace(/["“”„«»‹›'‘’`]/g, '')
+    .replace(/[()\[\]{}<>]/g, ' ')
+    // رموز بتتنطق بالاسم - نحوّلها لكلمة أو وقفة طبيعية
+    .replace(/\s*&\s*/g, ' و ')
+    .replace(/(\d)\s*%/g, '$1 في المية')
+    .replace(/\s*[\/\\|]\s*/g, ' أو ')
+    .replace(/\s*=\s*/g, ' تساوي ')
+    .replace(/\s*×\s*/g, ' في ')
+    .replace(/\s*÷\s*/g, ' على ')
+    .replace(/[+^$§¶©®™°•●◦▪■□◆◇★☆✓✔✗✘]/g, ' ')
+    .replace(/\s+[-–—]+\s+/g, '، ')     // شرطة بين كلمتين = وقفة صغيرة
+    .replace(/(\.{2,}|…)/g, '، ')        // ... = وقفة مش "نقطة نقطة نقطة"
+    .replace(/\s*:\s*/g, '، ')
+    .replace(/\s*;\s*/g, '، ')
+    // سطر جديد = نهاية جملة (وقفة طبيعية)
+    .replace(/\s*\n+\s*/g, '. ')
+    .replace(/([.،؟!])(\s*[.،])+/g, '$1')
     .replace(/[ \t]{2,}/g, ' ')
+    .replace(/^[\s.،]+/, '')
+    .replace(/\s+([.،؟!])/g, '$1')
+    .replace(/[\s،]+$/, '')
     .trim();
 }
 // كروم (خصوصًا على أندرويد) فيه باج معروف: أي جملة كلام متواصلة طويلة
@@ -3391,10 +3433,10 @@ async function speakBrowser(text, opts){
   // فيبقى أحيانًا صامت أو بلغة غلط رغم إنه هو نفس الكود اللي شغال.
   await pickArabicVoice();
   window.speechSynthesis.cancel();
-  const voiceToUse = arabicVoice || fallbackVoice;
+  let voiceToUse = arabicVoice || fallbackVoice;
   // تشخيص مؤقت (مرة واحدة بس في الجلسة) عشان نعرف بالظبط الصوت المُختار
   // إيه لو المشكلة استمرت - ده مش رسالة دايمة، هنشيلها بعد ما نتأكد من الحل.
-  if(!window.__voiceDebugShown){
+  if(false && !window.__voiceDebugShown){ // التشخيص المؤقت اتقفل - كان بيظهر رسالة للمتدرب
     window.__voiceDebugShown = true;
     const info = voiceToUse
       ? `الاسم: ${voiceToUse.name}\nاللغة: ${voiceToUse.lang}\nمحلي (شغال من غير إنترنت): ${voiceToUse.localService ? 'أيوة' : 'لأ'}`
@@ -3431,9 +3473,28 @@ async function speakBrowser(text, opts){
     u.rate = (opts && typeof opts.rate === 'number') ? opts.rate : 0.92;
     u.volume = 1;
     u.pitch = (opts && typeof opts.pitch === 'number') ? opts.pitch : 1;
-    u.onerror = (ev) => { console.error('speechSynthesis error', ev); speakChunk(idx + 1); };
-    u.onend = () => speakChunk(idx + 1);
+    let started = false, abandoned = false;
+    u.onstart = () => { started = true; };
+    u.onerror = (ev) => { if(abandoned) return; console.error('speechSynthesis error', ev); speakChunk(idx + 1); };
+    u.onend = () => { if(abandoned) return; speakChunk(idx + 1); };
     window.speechSynthesis.speak(u);
+    // الصوت الطبيعي (أونلاين) ممكن على بعض الأجهزة يفضل صامت من غير أي خطأ.
+    // لو مبدأش خلال 4 ثواني، نسيبه ونكمّل نفس الجملة بالصوت المحلي العادي.
+    if(voiceToUse && !voiceToUse.localService){
+      setTimeout(async () => {
+        if(started || abandoned || myGen !== speechGeneration) return;
+        abandoned = true;
+        window.__naturalVoiceBroken = true;
+        try{ window.speechSynthesis.cancel(); }catch(e){}
+        await pickArabicVoice();
+        voiceToUse = arabicVoice || fallbackVoice;
+        if(voiceToUse && !voiceToUse.localService){
+          const local = window.speechSynthesis.getVoices().find(v => v.localService && v.lang && v.lang.toLowerCase().startsWith('ar'));
+          if(local) voiceToUse = local;
+        }
+        speakChunk(idx);
+      }, 4000);
+    }
     // باج معروف على كروم أندرويد: أحيانًا الكلام بيتحط في وضع "Paused" لوحده
     // من غير أي سبب ظاهر، فيبان إنه شغال (الزرار بيتحول لـ"إيقاف الصوت") بس
     // من غير أي صوت طالع خالص. استئنافه يدوي هنا بيصلح الحالة دي.
