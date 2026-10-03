@@ -1261,10 +1261,14 @@ async function loadState(){
   // كده، نرجعها لوضع المدرب تلقائيًا بدل ما تضطر تسجل دخول تاني على طول.
   // (بقى بيتفحص على trainerAuth المنفصل بتاع المدرب، مش على جلسة المتدرب
   // المجهولة اللي مفروض تفضل زي ما هي دايمًا.)
+  // أمان: المنصة بتفتح دايمًا في وضع المتدرب. لو المتصفح ده كان فاضل مسجل
+  // دخول كمحاضر من زيارة قبل كده (Firebase بيفتكر الجلسة)، بنقفل الجلسة دي
+  // فورًا، عشان أي حد يفتح المنصة على نفس الجهاز (زي أجهزة معمل التدريب) ميدخلش
+  // وضع المحاضر من غير ما يكتب الإيميل وكلمة السر بنفسه.
   if(trainerAuth.currentUser){
-    state.role = 'trainer';
-    await resolveTrainerOrgContext();
+    try{ await trainerAuth.signOut(); }catch(e){ console.error(e); }
   }
+  state.role = 'trainee';
 
   // نفس فكرة "trainees": طلبات الاشتراك (وفيها صور إيصالات الدفع) بتتقرا
   // كلها بس للمدرب؛ المتدرب العادي بيشوف بس طلباته هو (query مفلترة باسمه).
@@ -3893,6 +3897,10 @@ document.getElementById('roleSwitch').addEventListener('click', async (e) => {
     }
     btn.disabled = false;
   } else if(btn.dataset.role !== 'trainer' && state.role === 'trainer'){
+    // الخروج من وضع المحاضر = تسجيل خروج حساب المحاضر نفسه، عشان محدش
+    // يرجعله تاني على نفس الجهاز من غير الإيميل وكلمة السر.
+    try{ await trainerAuth.signOut(); }catch(e){ console.error(e); }
+    state.isSuperAdmin = false;
     // رجعنا لوضع المتدرب - جلسة المتدرب المجهولة (fauth) ما اتلمستش خالص
     // طول الوقت اللي كنا فيه في وضع المحاضر، فبنرجع نقرا بيها تاني عادي
     // ونلاقي نفس حساب المتدرب بتاع الجهاز ده زي ما هو.
