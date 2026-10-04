@@ -186,13 +186,6 @@
   .mini-module{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#faf8f0;border-radius:8px;margin-bottom:8px;}
   .mini-module .t{font-weight:700;font-size:14px;}
   .request-card{border:1px solid #eee2c8;border-radius:10px;padding:14px;margin-bottom:12px;display:flex;gap:14px;flex-wrap:wrap;}
-  .ai-check{flex-basis:100%;border-radius:10px;background:#f7f9fc;border:1px solid #e3e8f0;padding:10px 12px;font-size:13px;line-height:1.9;color:#24324d;}
-  .ai-check .ai-row{display:flex;gap:6px;align-items:flex-start;}
-  .ai-check .ai-ok{color:#1d7a46;font-weight:700;}
-  .ai-check .ai-bad{color:#b3261e;font-weight:700;}
-  .ai-check .ai-warn{color:#9a6400;font-weight:700;}
-  .ai-check .ai-title{font-weight:700;margin-bottom:2px;}
-  .ai-check .ai-recheck{background:none;border:none;color:#2a5bd7;cursor:pointer;font-family:inherit;font-size:12px;padding:0;margin-top:4px;}
   .request-card img{width:130px;height:95px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;}
   .request-info{flex:1;min-width:160px;}
   .request-info .name{font-weight:700;font-size:15px;}
@@ -282,16 +275,6 @@
   @media (min-width:900px){
     .intro-visual.intro-visual-cover{max-width:820px;}
   }
-  /* مشهد الغلاف: من غير أفاتار، وصورة المركز مالية مساحة المقدمة كلها
-     (والكلام المكتوب تحتها). */
-  .intro-body.intro-cover-mode{flex-direction:column;flex-wrap:nowrap;gap:24px;padding:6px 16px;min-height:0;}
-  .intro-body.intro-cover-mode .intro-avatar{display:none;}
-  .intro-body.intro-cover-mode .intro-visual.intro-visual-cover{max-width:none;width:100%;min-width:0;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;}
-  .intro-body.intro-cover-mode .intro-visual-cover .logo-wrap{width:100%;height:100%;justify-content:center;}
-  .intro-body.intro-cover-mode .intro-visual-cover .logo-wrap img{width:auto !important;height:auto !important;max-width:100%;max-height:70vh;object-fit:contain;}
-  .intro-body.intro-cover-mode .intro-visual-cover .headline{margin-bottom:16px;}
-  .intro-body.intro-cover-mode .intro-avatar-col{min-width:0;flex:0 0 auto;}
-  .intro-body.intro-cover-mode .intro-caption{min-height:0;}
   .intro-visual .headline{font-family:'Cairo',sans-serif;font-weight:700;font-size:28px;color:var(--yellow);line-height:1.5;}
   .intro-visual .icon-row{display:flex;justify-content:center;gap:22px;margin-top:10px;flex-wrap:wrap;}
   .intro-visual .icon-row .ic{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;color:#cfe0da;}
@@ -380,21 +363,46 @@
 <div class="modal-overlay hidden" id="voiceSettingsOverlay">
   <div class="modal-box card">
     <h3 style="margin-top:0;">إعدادات صوت ودردشة المحاضر الذكي</h3>
-    <p class="hint">افتراضيًا المنصة بتستخدم صوت النطق المدمج في المتصفح. لو عايزة صوت أطبع (زي ElevenLabs)، حطي المفتاح والـ Voice ID هنا.</p>
-    <label class="small">ElevenLabs API Key</label>
-    <input type="password" id="ttsApiKey" placeholder="sk_...">
-    <label class="small">اختاري صوت</label>
-    <select id="ttsVoicePreset">
-      <option value="pNInz6obpgDQGcFmaJgB">Adam — رجالي</option>
-      <option value="ErXwobaYiN019PkySvjV">Antoni — رجالي</option>
-      <option value="TxGEqnHWrfWFTfGW9XjX">Josh — رجالي</option>
-      <option value="VR6AewLTigWG4xSOukaG">Arnold — رجالي</option>
-      <option value="21m00Tcm4TlvDq8ikWAM">Rachel — حريمي</option>
-      <option value="EXAVITQu4vr4xnSDxMaL">Bella — حريمي</option>
-      <option value="custom">مخصص — حطي Voice ID بنفسك</option>
+    <p class="hint">افتراضيًا المنصة بتستخدم صوت النطق المدمج في المتصفح (ده صوت آلي الطابع ومش قابل للتعديل). لو عايزة صوت طبيعي، اختاري مصدر صوت تاني من تحت.</p>
+    <label class="small">مصدر الصوت</label>
+    <select id="ttsProvider">
+      <option value="browser">صوت المتصفح الافتراضي (آلي)</option>
+      <option value="azure">Microsoft Azure — صوت مصري طبيعي (Salma / Shakir)</option>
+      <option value="elevenlabs">ElevenLabs</option>
     </select>
-    <input type="text" id="ttsVoiceId" placeholder="Voice ID" style="display:none;margin-top:8px;">
-    <div class="hint" style="color:#9a3b41;margin-top:10px;">⚠️ تنبيه أمان: المفتاح ده بيتخزن ويشتغل من متصفح أي حد بيفتح المنصة (المحاضر أو المتدرب)، يعني ممكن يظهر لأي حد يفتح أدوات المطور في المتصفح. متحطيش مفتاح فيه رصيد كبير، وراجعي حدود الاستخدام في حساب ElevenLabs بتاعك.</div>
+
+    <div id="azureFields" style="display:none;margin-top:10px;">
+      <label class="small">Azure Speech API Key</label>
+      <input type="password" id="azureApiKey" placeholder="...">
+      <label class="small">Azure Region (مثال: eastus, westeurope — زي ما هو مكتوب في حسابك)</label>
+      <input type="text" id="azureRegion" placeholder="eastus">
+      <label class="small">اختاري صوت</label>
+      <select id="azureVoicePreset">
+        <option value="ar-EG-SalmaNeural">Salma — حريمي مصري</option>
+        <option value="ar-EG-ShakirNeural">Shakir — رجالي مصري</option>
+        <option value="custom">مخصص — حطي اسم الصوت بنفسك</option>
+      </select>
+      <input type="text" id="azureVoiceName" placeholder="اسم الصوت، مثال: ar-EG-SalmaNeural" style="display:none;margin-top:8px;">
+      <div class="hint" style="margin-top:6px;">فيه باقة مجانية من Azure (حوالي نص مليون حرف شهريًا). اعملي حساب على Azure، فعّلي خدمة "Speech"، وجيبي المفتاح والـ Region من هناك.</div>
+    </div>
+
+    <div id="elevenFields" style="display:none;margin-top:10px;">
+      <label class="small">ElevenLabs API Key</label>
+      <input type="password" id="ttsApiKey" placeholder="sk_...">
+      <label class="small">اختاري صوت</label>
+      <select id="ttsVoicePreset">
+        <option value="pNInz6obpgDQGcFmaJgB">Adam — رجالي</option>
+        <option value="ErXwobaYiN019PkySvjV">Antoni — رجالي</option>
+        <option value="TxGEqnHWrfWFTfGW9XjX">Josh — رجالي</option>
+        <option value="VR6AewLTigWG4xSOukaG">Arnold — رجالي</option>
+        <option value="21m00Tcm4TlvDq8ikWAM">Rachel — حريمي</option>
+        <option value="EXAVITQu4vr4xnSDxMaL">Bella — حريمي</option>
+        <option value="custom">مخصص — حطي Voice ID بنفسك</option>
+      </select>
+      <input type="text" id="ttsVoiceId" placeholder="Voice ID" style="display:none;margin-top:8px;">
+    </div>
+
+    <div class="hint" style="color:#9a3b41;margin-top:10px;">⚠️ تنبيه أمان: أي مفتاح تحطيه هنا بيتخزن ويشتغل من متصفح أي حد بيفتح المنصة (المحاضر أو المتدرب)، يعني ممكن يظهر لأي حد يفتح أدوات المطور في المتصفح. متحطيش مفتاح فيه رصيد كبير، وراجعي حدود الاستخدام في حسابك بشكل دوري.</div>
     <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
     <label class="small">رابط سيرفر الذكاء الاصطناعي (لتشغيل "المدرب الذكي" اللي بيرد على أسئلة المتدربين)</label>
     <input type="text" id="aiWorkerUrl" placeholder="https://...workers.dev">
@@ -593,7 +601,7 @@ let state = {
   progressRegistry: {}, // shared: { [traineeId]: { [progKey]: {completed, score, opened} } }
   progress: { completed: [], scores: {} },
   chatHistory: {},
-  ttsSettings: { apiKey: '', voiceId: '' },
+  ttsSettings: { provider: 'browser', apiKey: '', voiceId: '', azureKey: '', azureRegion: '', azureVoice: '' },
   mediaSettings: { pexelsApiKey: '', youtubeApiKey: '' },
   aiSettings: { workerUrl: '' },
   adminPassword: null,
@@ -1268,14 +1276,10 @@ async function loadState(){
   // كده، نرجعها لوضع المدرب تلقائيًا بدل ما تضطر تسجل دخول تاني على طول.
   // (بقى بيتفحص على trainerAuth المنفصل بتاع المدرب، مش على جلسة المتدرب
   // المجهولة اللي مفروض تفضل زي ما هي دايمًا.)
-  // أمان: المنصة بتفتح دايمًا في وضع المتدرب. لو المتصفح ده كان فاضل مسجل
-  // دخول كمحاضر من زيارة قبل كده (Firebase بيفتكر الجلسة)، بنقفل الجلسة دي
-  // فورًا، عشان أي حد يفتح المنصة على نفس الجهاز (زي أجهزة معمل التدريب) ميدخلش
-  // وضع المحاضر من غير ما يكتب الإيميل وكلمة السر بنفسه.
   if(trainerAuth.currentUser){
-    try{ await trainerAuth.signOut(); }catch(e){ console.error(e); }
+    state.role = 'trainer';
+    await resolveTrainerOrgContext();
   }
-  state.role = 'trainee';
 
   // نفس فكرة "trainees": طلبات الاشتراك (وفيها صور إيصالات الدفع) بتتقرا
   // كلها بس للمدرب؛ المتدرب العادي بيشوف بس طلباته هو (query مفلترة باسمه).
@@ -1313,7 +1317,7 @@ async function loadState(){
     });
   }
 
-  const DEFAULT_TTS_SETTINGS = { apiKey: '', voiceId: '' };
+  const DEFAULT_TTS_SETTINGS = { provider: 'browser', apiKey: '', voiceId: '', azureKey: '', azureRegion: '', azureVoice: '' };
   const DEFAULT_AI_SETTINGS = { workerUrl: '' };
   try{
     const cfgRef = doc(fdb, 'platform', 'config');
@@ -2738,187 +2742,6 @@ async function getLectureScript(m){
   return script;
 }
 
-/* ================= الفحص التلقائي لطلبات الاشتراك (بالذكاء الاصطناعي) =================
-   Gemini بيقرا صورة البطاقة وإيصال الدفع ويطلّع منهم الرقم القومي والمبلغ، وبعدين
-   المنصة نفسها (مش الذكاء الاصطناعي) هي اللي بتقارن الأرقام دي بالمكتوب وبسعر
-   البرنامج - عشان المقارنة تبقى دقيقة 100% ومش مجرد "رأي". النتيجة بتتحفظ مع
-   الطلب، فالفحص بيحصل مرة واحدة بس لكل طلب (مش كل ما الصفحة تتفتح).
-   ده فحص مساعد: القبول أو الرفض لسه في إيد المحاضر، لأن صورة الإيصال لوحدها
-   ممكن تتزوّر، والتأكد النهائي إن الفلوس وصلت بيكون من كشف الحساب في البنك. */
-function toLatinDigits(str){
-  return String(str == null ? '' : str)
-    .replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
-    .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
-}
-function onlyDigits(str){ return toLatinDigits(str).replace(/\D/g, ''); }
-// فحص صيغة الرقم القومي المصري من غير ذكاء اصطناعي: 14 رقم، أول رقم 2 أو 3
-// (القرن)، وبعده تاريخ ميلاد سليم.
-function checkEgyptianNationalIdFormat(id){
-  const d = onlyDigits(id);
-  if(d.length !== 14) return { ok:false, reason:'الرقم مش 14 رقم' };
-  const c = d[0];
-  if(c !== '2' && c !== '3') return { ok:false, reason:'أول رقم لازم يكون 2 أو 3' };
-  const year = (c === '2' ? 1900 : 2000) + parseInt(d.slice(1,3), 10);
-  const month = parseInt(d.slice(3,5), 10), day = parseInt(d.slice(5,7), 10);
-  const dt = new Date(year, month - 1, day);
-  if(month < 1 || month > 12 || dt.getMonth() !== month - 1 || dt.getDate() !== day) return { ok:false, reason:'تاريخ الميلاد اللي جوه الرقم مش سليم' };
-  if(dt > new Date()) return { ok:false, reason:'تاريخ الميلاد اللي جوه الرقم في المستقبل' };
-  return { ok:true, birth: `${day}/${month}/${year}` };
-}
-function dataUrlToInlinePart(url){
-  const m = /^data:([^;,]+);base64,(.*)$/.exec(url || '');
-  return m ? { inline_data: { mime_type: m[1], data: m[2] } } : null;
-}
-async function callGeminiWithImages(system, parts, maxTokens){
-  const workerUrl = (state.aiSettings && state.aiSettings.workerUrl) || '';
-  if(!workerUrl) throw new Error('رابط سيرفر الذكاء الاصطناعي مش متحط في "⚙️ صوت AI".');
-  const once = async () => {
-    const response = await fetch(workerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: system }] },
-        contents: [{ role: 'user', parts }],
-        generationConfig: { maxOutputTokens: maxTokens || 1500, temperature: 0 }
-      })
-    });
-    let data = null;
-    try{ data = await response.json(); }catch(e){}
-    if(!response.ok || (data && data.error)){
-      const detail = (data && data.error && data.error.message) || (response.status + ' ' + response.statusText);
-      const err = new Error(detail);
-      err.busy = response.status === 503 || response.status === 429 || /overloaded|quota|rate limit|resource_exhausted|unavailable/i.test(detail);
-      throw err;
-    }
-    const cand = data && data.candidates && data.candidates[0];
-    const text = ((cand && cand.content && cand.content.parts) || []).map(x => x.text || '').join('\n').trim();
-    if(!text) throw new Error('مفيش رد');
-    return text;
-  };
-  try{ return await once(); }
-  catch(e){
-    if(e && e.busy){ await new Promise(r => setTimeout(r, 6000)); return await once(); }
-    throw e;
-  }
-}
-async function runRequestAiCheck(r, p){
-  const profile = state.traineeProfiles.find(t => t.id === r.traineeId);
-  const idImg = profile ? profile.nationalIdImage : null;
-  const parts = [];
-  const idPart = dataUrlToInlinePart(idImg);
-  const receiptPart = dataUrlToInlinePart(r.screenshotDataUrl);
-  if(idPart){ parts.push({ text: 'الصورة الأولى: صورة بطاقة الرقم القومي.' }); parts.push(idPart); }
-  if(receiptPart){ parts.push({ text: (idPart ? 'الصورة التانية' : 'الصورة') + ': اسكرين شوت إيصال الدفع / التحويل.' }); parts.push(receiptPart); }
-  if(!parts.length) throw new Error('مفيش صور في الطلب ده');
-  parts.push({ text: `طلّع البيانات دي من الصور بالظبط زي ما هي مكتوبة، ورجّع JSON بس من غير أي كلام تاني:
-{
- "id_card_found": true/false (هل فيه صورة بطاقة رقم قومي مصرية فعلًا),
- "id_number": "الرقم القومي اللي في البطاقة (14 رقم) أو null لو مش واضح",
- "id_name": "الاسم المكتوب في البطاقة أو null",
- "receipt_found": true/false (هل الصورة إيصال دفع أو تحويل فلوس فعلًا),
- "receipt_amount": رقم المبلغ اللي اتحوّل (رقم بس) أو null,
- "receipt_currency": "العملة أو null",
- "receipt_account": "رقم حساب أو موبايل المستلم الظاهر في الإيصال أو null",
- "receipt_date": "تاريخ العملية أو null",
- "notes": "أي ملاحظة مهمة باختصار (زي إن الصورة مش واضحة أو شكلها متعدل) أو null"
-}
-لو حاجة مش ظاهرة أو مش متأكد منها، حط null وماتخمّنش.` });
-  const raw = await callGeminiWithImages('أنت مساعد دقيق بيقرا مستندات مصرية (بطاقات رقم قومي وإيصالات تحويل بنكي أو محافظ إلكترونية). بترجّع JSON بس.', parts, 1200);
-  const x = extractJson(raw) || {};
-  const res = { checkedAt: Date.now(), expectedCost: p.cost, raw: x };
-  // مقارنة الرقم القومي (بتعملها المنصة نفسها رقم برقم)
-  const typedId = onlyDigits(r.traineeNationalId);
-  const cardId = onlyDigits(x.id_number);
-  if(!idPart) res.id = { status: 'missing', text: 'المتدرب ما رفعش صورة بطاقة.' };
-  else if(x.id_card_found === false) res.id = { status: 'bad', text: 'الصورة اللي اترفعت مش باينة إنها بطاقة رقم قومي.' };
-  else if(!cardId) res.id = { status: 'warn', text: 'الرقم في البطاقة مش واضح، راجعيه بعينك.' };
-  else if(!typedId) res.id = { status: 'warn', text: `المتدرب ما كتبش رقم قومي. الرقم اللي في البطاقة: ${cardId}` };
-  else if(cardId === typedId) res.id = { status: 'ok', text: `الرقم القومي مطابق للبطاقة (${typedId})` };
-  else {
-    let diff = 0; for(let i=0;i<Math.max(cardId.length,typedId.length);i++) if(cardId[i] !== typedId[i]) diff++;
-    res.id = { status: diff <= 1 && cardId.length === typedId.length ? 'warn' : 'bad',
-      text: `الرقم مش مطابق: المكتوب ${typedId} - اللي في البطاقة ${cardId}` + (diff <= 1 ? ' (فرق رقم واحد، ممكن يكون خطأ في القراءة - راجعيه)' : '') };
-  }
-  // اسم البطاقة مقابل اسم التسجيل (تنبيه بس، لأن الأسماء بتتكتب بأشكال مختلفة)
-  if(x.id_name){
-    const norm = t => String(t||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[^ء-يa-z\s]/gi,'').trim().split(/\s+/).filter(Boolean);
-    const a = norm(r.traineeName), b = norm(x.id_name);
-    const common = a.filter(w => b.includes(w)).length;
-    res.name = common >= Math.min(2, a.length)
-      ? { status: 'ok', text: `الاسم في البطاقة: ${x.id_name}` }
-      : { status: 'warn', text: `الاسم في البطاقة (${x.id_name}) مختلف عن اسم التسجيل (${r.traineeName})` };
-  }
-  // مقارنة المبلغ بسعر البرنامج
-  const amount = x.receipt_amount == null ? null : parseFloat(toLatinDigits(String(x.receipt_amount)).replace(/[^\d.]/g,''));
-  if(!receiptPart) res.amount = { status: 'missing', text: 'مفيش إيصال.' };
-  else if(x.receipt_found === false) res.amount = { status: 'bad', text: 'الصورة اللي اترفعت مش باينة إنها إيصال دفع.' };
-  else if(amount == null || isNaN(amount)) res.amount = { status: 'warn', text: 'المبلغ في الإيصال مش واضح، راجعيه بعينك.' };
-  else if(Math.abs(amount - p.cost) < 0.5) res.amount = { status: 'ok', text: `المبلغ مطابق لسعر البرنامج (${p.cost} ج.م)` };
-  else if(amount > p.cost) res.amount = { status: 'warn', text: `المبلغ في الإيصال ${amount} أكبر من سعر البرنامج ${p.cost} ج.م` };
-  else res.amount = { status: 'bad', text: `المبلغ ناقص: الإيصال ${amount} - وسعر البرنامج ${p.cost} ج.م` };
-  // حساب المستلم مقابل حساب المركز
-  const acc = onlyDigits(state.bankAccount && state.bankAccount.accountNumber);
-  const recAcc = onlyDigits(x.receipt_account);
-  if(acc && recAcc && recAcc.length >= 4){
-    const tail = s2 => s2.slice(-4);
-    res.account = (acc.includes(recAcc) || recAcc.includes(acc) || tail(acc) === tail(recAcc))
-      ? { status: 'ok', text: 'التحويل رايح لحساب المركز' }
-      : { status: 'bad', text: `رقم الحساب في الإيصال (${recAcc}) مش هو حساب المركز` };
-  }
-  if(x.notes) res.notes = String(x.notes);
-  return res;
-}
-function renderAiCheckHtml(r, p){
-  const nid = r.traineeNationalId ? checkEgyptianNationalIdFormat(r.traineeNationalId) : null;
-  const icon = st => st === 'ok' ? '<span class="ai-ok">✔</span>' : st === 'bad' ? '<span class="ai-bad">✖</span>' : '<span class="ai-warn">⚠</span>';
-  let rows = '';
-  if(nid) rows += `<div class="ai-row">${icon(nid.ok?'ok':'bad')}<span>${nid.ok ? 'صيغة الرقم القومي سليمة (تاريخ الميلاد ' + nid.birth + ')' : 'صيغة الرقم القومي غلط: ' + nid.reason}</span></div>`;
-  const c = r.aiCheck;
-  if(window.__aiChecking && window.__aiChecking[r.id]){
-    rows += `<div class="ai-row"><span>⏳ بيتم فحص البطاقة والإيصال تلقائيًا...</span></div>`;
-  } else if(c && c.error){
-    rows += `<div class="ai-row">${icon('warn')}<span>الفحص التلقائي ماشتغلش: ${escapeHtml(c.error)}</span></div>`;
-  } else if(c){
-    ['id','name','amount','account'].forEach(k => { if(c[k]) rows += `<div class="ai-row">${icon(c[k].status)}<span>${escapeHtml(c[k].text)}</span></div>`; });
-    if(c.raw && c.raw.receipt_date) rows += `<div class="ai-row"><span>📅 تاريخ التحويل في الإيصال: ${escapeHtml(String(c.raw.receipt_date))}</span></div>`;
-    if(c.notes) rows += `<div class="ai-row"><span>📝 ${escapeHtml(c.notes)}</span></div>`;
-    if(c.expectedCost !== p.cost) rows += `<div class="ai-row">${icon('warn')}<span>سعر البرنامج اتغيّر من وقت الفحص (كان ${c.expectedCost}) - اعملي إعادة فحص.</span></div>`;
-  }
-  return `<div class="ai-title">🤖 الفحص التلقائي</div>${rows || '<div class="hint">لسه ما اتفحصش.</div>'}
-    <div class="hint" style="margin:2px 0 0;">الفحص مساعد بس - اتأكدي من وصول المبلغ في كشف الحساب قبل القبول.</div>
-    <button class="ai-recheck" data-rid="${r.id}">🔄 إعادة الفحص</button>`;
-}
-async function startRequestAiChecks(el, p, force){
-  window.__aiChecking = window.__aiChecking || {};
-  const queue = state.requests.filter(r => r.programId === p.id && (force ? force === r.id : (r.status === 'pending' && !r.aiCheck)));
-  for(const r of queue){
-    if(window.__aiChecking[r.id]) continue;
-    window.__aiChecking[r.id] = true;
-    const box = () => document.getElementById('aicheck-' + r.id);
-    if(box()) box().innerHTML = renderAiCheckHtml(r, p);
-    try{
-      r.aiCheck = await runRequestAiCheck(r, p);
-    }catch(e){
-      console.error('AI check failed', e);
-      r.aiCheck = { error: (e && e.message) || 'خطأ غير معروف', checkedAt: Date.now() };
-    }
-    delete window.__aiChecking[r.id];
-    try{ await setDoc(doc(currentDb(), 'requests', r.id), r); }catch(e){ console.error(e); }
-    if(box()){ box().innerHTML = renderAiCheckHtml(r, p); bindAiRecheck(el, p); }
-  }
-}
-function bindAiRecheck(el, p){
-  el.querySelectorAll('.ai-recheck').forEach(b => {
-    if(b.__bound) return; b.__bound = true;
-    b.addEventListener('click', () => {
-      const r = state.requests.find(x => x.id === b.dataset.rid);
-      if(!r) return;
-      delete r.aiCheck;
-      startRequestAiChecks(el, p, r.id);
-    });
-  });
-}
-
 function renderRequestsTab(el, p){
   const list = state.requests.filter(r => r.programId === p.id).sort((a,b)=>b.submittedAt-a.submittedAt);
   if(!list.length){ el.innerHTML = `<div class="card"><div class="empty">لسه مفيش طلبات اشتراك على البرنامج ده.</div></div>`; return; }
@@ -2940,7 +2763,7 @@ function renderRequestsTab(el, p){
         <div class="meta">${escapeHtml(r.traineePhone)} · ${new Date(r.submittedAt).toLocaleString('ar-EG')}</div>
         ${r.traineeOrg ? `<div class="meta">الجهة: ${escapeHtml(r.traineeOrg)}</div>` : ''}
         ${r.traineeNationalId ? `<div class="meta" style="font-weight:700;">الرقم القومي المكتوب: ${escapeHtml(r.traineeNationalId)}</div>` : ''}
-        ${idImg ? `<div class="hint">الفحص التلقائي تحت بيقارن الرقم المكتوب بالبطاقة لوحده.</div>` : `<div class="hint">المتدربة لسه ما رفعتش صورة بطاقة.</div>`}
+        ${idImg ? `<div class="hint">قارني الرقم المكتوب فوق بالرقم الظاهر في صورة البطاقة جنبه.</div>` : `<div class="hint">المتدربة لسه ما رفعتش صورة بطاقة.</div>`}
         <div style="margin-top:8px;">
           <span class="badge ${r.status}">${r.status==='pending'?'قيد المراجعة':r.status==='approved'?'مقبول':'مرفوض'}</span>
           ${r.status==='approved' && r.manuallyLocked ? `<span class="badge rejected">مقفول يدويًا</span>` : ''}
@@ -2957,11 +2780,8 @@ function renderRequestsTab(el, p){
       ${r.status==='approved' ? `<div class="row" style="align-self:center;">
         <button class="btn ${r.manuallyLocked ? 'btn-primary' : 'btn-danger'} lock-toggle-btn" data-rid="${r.id}">${r.manuallyLocked ? 'إلغاء القفل' : 'قفل الوصول يدويًا'}</button>
       </div>` : ''}
-      <div class="ai-check" id="aicheck-${r.id}">${renderAiCheckHtml(r, p)}</div>
     </div>`;
   }).join('') + `</div>`;
-  bindAiRecheck(el, p);
-  startRequestAiChecks(el, p);
 
   el.querySelectorAll('.view-shot').forEach(img => img.addEventListener('click', () => window.open(img.dataset.full, '_blank')));
   el.querySelectorAll('.accept-btn').forEach(b => b.addEventListener('click', async () => {
@@ -3417,8 +3237,7 @@ async function sendChatMessage(text){
 ${m.content}
 ---
 لو السؤال متعلق بالمحتوى ده، اشرحي بالتفصيل. لو السؤال عام أو برة نطاق الوحدة، جاوبي بأفضل ما تقدري ونبّهي بلطف إنه خارج محتوى الوحدة الحالية.
-مهم جدًا: اكتبي ردك كفقرات كلام عادي متصل، من غير أي رموز تنسيق خالص (من غير **، من غير ##، من غير نقط أو شرطات أول السطر زي - أو •). الرد ده بيتعرض كنص عادي وبيتقري بصوت مسموع كمان، فأي رمز من دول هيتقري بصوته الحرفي (زي "نجمة") ويبوّظ الكلام.
-كمان عشان الرد بيتقري بصوت مسموع: متستخدميش علامات تنصيص ولا أقواس ولا شرطة مائلة / ولا رموز زي % أو & أو = أو إيموجي، واكتبي الأرقام والنسب بالكلام لما يكون ممكن، وخلي الجمل قصيرة وطبيعية كأنك بتتكلمي مع المتدرب وجهًا لوجه.`;
+مهم جدًا: اكتبي ردك كفقرات كلام عادي متصل، من غير أي رموز تنسيق خالص (من غير **، من غير ##، من غير نقط أو شرطات أول السطر زي - أو •). الرد ده بيتعرض كنص عادي وبيتقري بصوت مسموع كمان، فأي رمز من دول هيتقري بصوته الحرفي (زي "نجمة") ويبوّظ الكلام.`;
   try{
     // نبعت آخر شوية رسائل من المحادثة (مش السؤال الأخير بس) عشان الذكاء الاصطناعي
     // يفتكر سياق الكلام اللي فات ويجاوب وهو "فاهم" المتدرب مش بس شايف سؤال منفصل.
@@ -3443,6 +3262,7 @@ ${m.content}
 
 /* ================= Voice (AI instructor speaks) ================= */
 const DEFAULT_VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // ElevenLabs "Adam" - male voice
+const DEFAULT_AZURE_VOICE = 'ar-EG-SalmaNeural'; // Azure Egyptian Arabic - female voice
 let arabicVoice = null;
 let fallbackVoice = null; // بيتستخدم لو الجهاز مفيهوش صوت عربي مثبت خالص (بيحصل أحيانًا على أجهزة كمبيوتر)
 let currentAudio = null;
@@ -3496,18 +3316,6 @@ async function pickArabicVoice(){
   // بعض متصفحات الموبايل (خصوصًا جوه WebView) بترد إنها اتقالت بنجاح من
   // غير ما تطلع أي صوت فعليًا - ده أكتر سبب واقعي للصمت اللي بيحصل رغم إن
   // الكود مش بيرمي أي خطأ.
-  // الأصوات "الطبيعية" (Natural/Neural) - زي Microsoft Salma وShakir (عربي مصري)
-  // في متصفح Edge - مجانية وصوتها قريب جدًا من صوت إنسان، فبنفضّلها الأول.
-  // لو اتضح إنها مش شغالة على الجهاز ده (صامتة)، speakBrowser بيعلّم عليها
-  // (__naturalVoiceBroken) ونرجع للترتيب القديم.
-  const naturalPattern = wantsFemale ? /salma|zariyah|amany|fatima|hoda|female/i : /shakir|hamed|omar|male/i;
-  const isNatural = v => /natural|neural|online/i.test(v.name);
-  const naturalVoices = window.__naturalVoiceBroken ? [] : arabicVoices.filter(isNatural);
-  const preferredNatural = naturalVoices.find(v => /eg/i.test(v.lang) && naturalPattern.test(v.name))
-    || naturalVoices.find(v => naturalPattern.test(v.name))
-    || naturalVoices.find(v => /eg/i.test(v.lang))
-    || naturalVoices[0];
-  if(preferredNatural){ arabicVoice = preferredNatural; return; }
   const preferred = arabicVoices.find(v => v.localService && genderPattern.test(v.name))
     || arabicVoices.find(v => v.localService)
     || arabicVoices.find(v => genderPattern.test(v.name))
@@ -3563,36 +3371,7 @@ function stripFormattingForSpeech(text){
     .replace(/^\s*[-•●◦*]\s+/gm, '')   // - نقطة قائمة أول السطر -> تتشال
     .replace(/`([^`]*)`/g, '$1')       // `كود` -> كود
     .replace(/[*_~`#]/g, '')           // أي رمز تنسيق متبقي بره الحالات فوق
-    // روابط وإيميلات: مفيش داعي تتقري حرف حرف
-    .replace(/https?:\/\/\S+|www\.\S+/gi, '')
-    .replace(/\S+@\S+\.\S+/g, '')
-    // إيموجي ورموز زخرفية (أسهم، نجوم، علامات صح...)
-    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '')
-    // ترقيم القوايم أول السطر (1. أو 1- أو ١) أو أ-)
-    .replace(/^\s*[0-9٠-٩]{1,2}\s*[.)\-–]\s+/gm, '')
-    .replace(/^\s*[أ-ي]\s*[)\-–]\s+/gm, '')
-    // علامات التنصيص والأقواس: نسيب الكلام اللي جواها ونشيل العلامة نفسها
-    .replace(/["“”„«»‹›'‘’`]/g, '')
-    .replace(/[()\[\]{}<>]/g, ' ')
-    // رموز بتتنطق بالاسم - نحوّلها لكلمة أو وقفة طبيعية
-    .replace(/\s*&\s*/g, ' و ')
-    .replace(/(\d)\s*%/g, '$1 في المية')
-    .replace(/\s*[\/\\|]\s*/g, ' أو ')
-    .replace(/\s*=\s*/g, ' تساوي ')
-    .replace(/\s*×\s*/g, ' في ')
-    .replace(/\s*÷\s*/g, ' على ')
-    .replace(/[+^$§¶©®™°•●◦▪■□◆◇★☆✓✔✗✘]/g, ' ')
-    .replace(/\s+[-–—]+\s+/g, '، ')     // شرطة بين كلمتين = وقفة صغيرة
-    .replace(/(\.{2,}|…)/g, '، ')        // ... = وقفة مش "نقطة نقطة نقطة"
-    .replace(/\s*:\s*/g, '، ')
-    .replace(/\s*;\s*/g, '، ')
-    // سطر جديد = نهاية جملة (وقفة طبيعية)
-    .replace(/\s*\n+\s*/g, '. ')
-    .replace(/([.،؟!])(\s*[.،])+/g, '$1')
     .replace(/[ \t]{2,}/g, ' ')
-    .replace(/^[\s.،]+/, '')
-    .replace(/\s+([.،؟!])/g, '$1')
-    .replace(/[\s،]+$/, '')
     .trim();
 }
 // كروم (خصوصًا على أندرويد) فيه باج معروف: أي جملة كلام متواصلة طويلة
@@ -3638,10 +3417,10 @@ async function speakBrowser(text, opts){
   // فيبقى أحيانًا صامت أو بلغة غلط رغم إنه هو نفس الكود اللي شغال.
   await pickArabicVoice();
   window.speechSynthesis.cancel();
-  let voiceToUse = arabicVoice || fallbackVoice;
+  const voiceToUse = arabicVoice || fallbackVoice;
   // تشخيص مؤقت (مرة واحدة بس في الجلسة) عشان نعرف بالظبط الصوت المُختار
   // إيه لو المشكلة استمرت - ده مش رسالة دايمة، هنشيلها بعد ما نتأكد من الحل.
-  if(false && !window.__voiceDebugShown){ // التشخيص المؤقت اتقفل - كان بيظهر رسالة للمتدرب
+  if(!window.__voiceDebugShown){
     window.__voiceDebugShown = true;
     const info = voiceToUse
       ? `الاسم: ${voiceToUse.name}\nاللغة: ${voiceToUse.lang}\nمحلي (شغال من غير إنترنت): ${voiceToUse.localService ? 'أيوة' : 'لأ'}`
@@ -3678,28 +3457,9 @@ async function speakBrowser(text, opts){
     u.rate = (opts && typeof opts.rate === 'number') ? opts.rate : 0.92;
     u.volume = 1;
     u.pitch = (opts && typeof opts.pitch === 'number') ? opts.pitch : 1;
-    let started = false, abandoned = false;
-    u.onstart = () => { started = true; };
-    u.onerror = (ev) => { if(abandoned) return; console.error('speechSynthesis error', ev); speakChunk(idx + 1); };
-    u.onend = () => { if(abandoned) return; speakChunk(idx + 1); };
+    u.onerror = (ev) => { console.error('speechSynthesis error', ev); speakChunk(idx + 1); };
+    u.onend = () => speakChunk(idx + 1);
     window.speechSynthesis.speak(u);
-    // الصوت الطبيعي (أونلاين) ممكن على بعض الأجهزة يفضل صامت من غير أي خطأ.
-    // لو مبدأش خلال 4 ثواني، نسيبه ونكمّل نفس الجملة بالصوت المحلي العادي.
-    if(voiceToUse && !voiceToUse.localService){
-      setTimeout(async () => {
-        if(started || abandoned || myGen !== speechGeneration) return;
-        abandoned = true;
-        window.__naturalVoiceBroken = true;
-        try{ window.speechSynthesis.cancel(); }catch(e){}
-        await pickArabicVoice();
-        voiceToUse = arabicVoice || fallbackVoice;
-        if(voiceToUse && !voiceToUse.localService){
-          const local = window.speechSynthesis.getVoices().find(v => v.localService && v.lang && v.lang.toLowerCase().startsWith('ar'));
-          if(local) voiceToUse = local;
-        }
-        speakChunk(idx);
-      }, 4000);
-    }
     // باج معروف على كروم أندرويد: أحيانًا الكلام بيتحط في وضع "Paused" لوحده
     // من غير أي سبب ظاهر، فيبان إنه شغال (الزرار بيتحول لـ"إيقاف الصوت") بس
     // من غير أي صوت طالع خالص. استئنافه يدوي هنا بيصلح الحالة دي.
@@ -3741,10 +3501,40 @@ async function fetchElevenLabsAudio(text, apiKey, voiceId){
   }
   return await resp.blob();
 }
+// بتهرب الحروف الخاصة (& < > " ') قبل ما ندخل النص جوه SSML لأزيور، عشان لو
+// النص فيه رمز زي & مثلاً الطلب ميفشلش أو يتقطع.
+function escapeForSsml(text){
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+async function fetchAzureSpeechAudio(text, apiKey, region, voiceName){
+  const gender = /shakir/i.test(voiceName) ? 'Male' : 'Female';
+  const ssml = `<speak version='1.0' xml:lang='ar-EG'><voice xml:lang='ar-EG' xml:gender='${gender}' name='${voiceName}'>${escapeForSsml(text)}</voice></speak>`;
+  const resp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': apiKey,
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+    },
+    body: ssml
+  });
+  if(!resp.ok){
+    let detail = '';
+    try{ detail = await resp.text(); }catch(e){ /* ignore */ }
+    throw new Error('Azure Speech request failed: ' + resp.status + (detail ? (' - ' + detail) : ''));
+  }
+  return await resp.blob();
+}
 /**
- * Speaks text using ElevenLabs if an API key is configured, otherwise falls back
- * to the browser's built-in speech synthesis. Returns either an <audio> element
- * or a SpeechSynthesisUtterance so callers can attach an "onend"/"onended" handler.
+ * Speaks text using Azure or ElevenLabs if configured (Azure takes priority when both
+ * are present and the saved provider doesn't say otherwise), otherwise falls back to
+ * the browser's built-in speech synthesis. Returns either an <audio> element or a
+ * SpeechSynthesisUtterance so callers can attach an "onend"/"onended" handler.
  */
 async function speakSmart(text, opts){
   // بتوقف أي كلام شغال (وده هو اللي بيزوّد الجيل)، وبعدين ناخد رقم الجيل ده
@@ -3753,9 +3543,34 @@ async function speakSmart(text, opts){
   stopAllSpeech();
   const myGen = speechGeneration;
   text = stripFormattingForSpeech(text);
-  if(state.ttsSettings && state.ttsSettings.apiKey){
+  const tts = state.ttsSettings || {};
+  // provider بيتحفظ صريح من شاشة الإعدادات. لو مش موجود (إعدادات قديمة من قبل
+  // إضافة Azure)، بنستنتجه من المفاتيح المحفوظة بنفس المنطق القديم.
+  const provider = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
+
+  if(provider === 'azure' && tts.azureKey && tts.azureRegion){
     try{
-      const blob = await fetchElevenLabsAudio(text, state.ttsSettings.apiKey, state.ttsSettings.voiceId || DEFAULT_VOICE_ID);
+      const blob = await fetchAzureSpeechAudio(text, tts.azureKey, tts.azureRegion, tts.azureVoice || DEFAULT_AZURE_VOICE);
+      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
+      const url = URL.createObjectURL(blob);
+      currentAudio = new Audio(url);
+      currentAudio.volume = 1;
+      await currentAudio.play();
+      return currentAudio;
+    }catch(e){
+      if(myGen !== speechGeneration) return null;
+      console.error('Azure TTS failed, falling back to browser voice', e);
+      if(!window.__azureFailureShown){
+        window.__azureFailureShown = true;
+        alert('صوت Azure مش شغال دلوقتي، فبيتشغل صوت المتصفح الاحتياطي بدل منه.\n\nسبب الخطأ: ' + (e && e.message ? e.message : 'غير معروف') + '\n\nراجعي المفتاح (API Key) والـ Region في "⚙️ صوت AI".');
+      }
+      return speakBrowser(text, opts);
+    }
+  }
+
+  if(provider === 'elevenlabs' && tts.apiKey){
+    try{
+      const blob = await fetchElevenLabsAudio(text, tts.apiKey, tts.voiceId || DEFAULT_VOICE_ID);
       if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
       const url = URL.createObjectURL(blob);
       currentAudio = new Audio(url);
@@ -3772,6 +3587,7 @@ async function speakSmart(text, opts){
       return speakBrowser(text, opts);
     }
   }
+
   if(myGen !== speechGeneration) return null;
   return speakBrowser(text, opts);
 }
@@ -4088,10 +3904,6 @@ document.getElementById('roleSwitch').addEventListener('click', async (e) => {
     }
     btn.disabled = false;
   } else if(btn.dataset.role !== 'trainer' && state.role === 'trainer'){
-    // الخروج من وضع المحاضر = تسجيل خروج حساب المحاضر نفسه، عشان محدش
-    // يرجعله تاني على نفس الجهاز من غير الإيميل وكلمة السر.
-    try{ await trainerAuth.signOut(); }catch(e){ console.error(e); }
-    state.isSuperAdmin = false;
     // رجعنا لوضع المتدرب - جلسة المتدرب المجهولة (fauth) ما اتلمستش خالص
     // طول الوقت اللي كنا فيه في وضع المحاضر، فبنرجع نقرا بيها تاني عادي
     // ونلاقي نفس حساب المتدرب بتاع الجهاز ده زي ما هو.
@@ -4166,10 +3978,21 @@ document.getElementById('chatInput').addEventListener('keydown', (e) => { if(e.k
 })();
 
 const KNOWN_VOICE_IDS = ['pNInz6obpgDQGcFmaJgB','ErXwobaYiN019PkySvjV','TxGEqnHWrfWFTfGW9XjX','VR6AewLTigWG4xSOukaG','21m00Tcm4TlvDq8ikWAM','EXAVITQu4vr4xnSDxMaL'];
+const KNOWN_AZURE_VOICES = ['ar-EG-SalmaNeural','ar-EG-ShakirNeural'];
+// بتظهر/تخفي حقول Azure أو ElevenLabs حسب مصدر الصوت المختار، وتسيب صوت
+// المتصفح من غير أي حقول إضافية.
+function syncTtsProviderFields(){
+  const provider = document.getElementById('ttsProvider').value;
+  document.getElementById('azureFields').style.display = provider === 'azure' ? 'block' : 'none';
+  document.getElementById('elevenFields').style.display = provider === 'elevenlabs' ? 'block' : 'none';
+}
 document.getElementById('voiceSettingsBtn').addEventListener('click', () => {
-  document.getElementById('ttsApiKey').value = state.ttsSettings.apiKey || '';
+  const tts = state.ttsSettings || {};
   document.getElementById('aiWorkerUrl').value = (state.aiSettings && state.aiSettings.workerUrl) || '';
-  const currentVoiceId = state.ttsSettings.voiceId || DEFAULT_VOICE_ID;
+
+  // ElevenLabs
+  document.getElementById('ttsApiKey').value = tts.apiKey || '';
+  const currentVoiceId = tts.voiceId || DEFAULT_VOICE_ID;
   const preset = document.getElementById('ttsVoicePreset');
   const customInput = document.getElementById('ttsVoiceId');
   if(KNOWN_VOICE_IDS.includes(currentVoiceId)){
@@ -4181,10 +4004,37 @@ document.getElementById('voiceSettingsBtn').addEventListener('click', () => {
     customInput.style.display = 'block';
     customInput.value = currentVoiceId;
   }
+
+  // Azure
+  document.getElementById('azureApiKey').value = tts.azureKey || '';
+  document.getElementById('azureRegion').value = tts.azureRegion || '';
+  const currentAzureVoice = tts.azureVoice || DEFAULT_AZURE_VOICE;
+  const azurePreset = document.getElementById('azureVoicePreset');
+  const azureCustomInput = document.getElementById('azureVoiceName');
+  if(KNOWN_AZURE_VOICES.includes(currentAzureVoice)){
+    azurePreset.value = currentAzureVoice;
+    azureCustomInput.style.display = 'none';
+    azureCustomInput.value = '';
+  } else {
+    azurePreset.value = 'custom';
+    azureCustomInput.style.display = 'block';
+    azureCustomInput.value = currentAzureVoice;
+  }
+
+  // مصدر الصوت المختار حاليًا (لو إعدادات قديمة من قبل إضافة Azure، بنستنتجه
+  // من المفاتيح المحفوظة بنفس منطق speakSmart)
+  document.getElementById('ttsProvider').value = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
+  syncTtsProviderFields();
+
   document.getElementById('voiceSettingsOverlay').classList.remove('hidden');
 });
+document.getElementById('ttsProvider').addEventListener('change', syncTtsProviderFields);
 document.getElementById('ttsVoicePreset').addEventListener('change', (e) => {
   const customInput = document.getElementById('ttsVoiceId');
+  customInput.style.display = e.target.value === 'custom' ? 'block' : 'none';
+});
+document.getElementById('azureVoicePreset').addEventListener('change', (e) => {
+  const customInput = document.getElementById('azureVoiceName');
   customInput.style.display = e.target.value === 'custom' ? 'block' : 'none';
 });
 document.getElementById('closeTtsBtn').addEventListener('click', () => {
@@ -4193,9 +4043,15 @@ document.getElementById('closeTtsBtn').addEventListener('click', () => {
 document.getElementById('saveTtsBtn').addEventListener('click', async () => {
   const preset = document.getElementById('ttsVoicePreset').value;
   const voiceId = preset === 'custom' ? document.getElementById('ttsVoiceId').value.trim() : preset;
+  const azurePreset = document.getElementById('azureVoicePreset').value;
+  const azureVoice = azurePreset === 'custom' ? document.getElementById('azureVoiceName').value.trim() : azurePreset;
   state.ttsSettings = {
+    provider: document.getElementById('ttsProvider').value,
     apiKey: document.getElementById('ttsApiKey').value.trim(),
-    voiceId: voiceId
+    voiceId: voiceId,
+    azureKey: document.getElementById('azureApiKey').value.trim(),
+    azureRegion: document.getElementById('azureRegion').value.trim(),
+    azureVoice: azureVoice
   };
   state.aiSettings = {
     workerUrl: document.getElementById('aiWorkerUrl').value.trim()
@@ -4204,12 +4060,17 @@ document.getElementById('saveTtsBtn').addEventListener('click', async () => {
   document.getElementById('voiceSettingsOverlay').classList.add('hidden');
 });
 document.getElementById('clearTtsBtn').addEventListener('click', async () => {
-  state.ttsSettings = { apiKey: '', voiceId: '' };
+  state.ttsSettings = { provider: 'browser', apiKey: '', voiceId: '', azureKey: '', azureRegion: '', azureVoice: '' };
   state.aiSettings = { workerUrl: '' };
   await Promise.all([saveTtsSettings(), saveAiSettings()]);
+  document.getElementById('ttsProvider').value = 'browser';
   document.getElementById('ttsApiKey').value = '';
   document.getElementById('ttsVoiceId').value = '';
+  document.getElementById('azureApiKey').value = '';
+  document.getElementById('azureRegion').value = '';
+  document.getElementById('azureVoiceName').value = '';
   document.getElementById('aiWorkerUrl').value = '';
+  syncTtsProviderFields();
 });
 
 document.getElementById('closeAdminPwBtn').addEventListener('click', () => {
@@ -4264,40 +4125,18 @@ const INTRO_SCENES = [
   { visual: 'icons', icons: [['⏰','مرونة التعلم'],['📍','أي وقت ومكان'],['📈','متابعة وتقييم'],['🎓','شهادات معتمدة']], caption: "مرونة في التعلم... في أي وقت ومن أي مكان... متابعة وتقييم مستواك... وشهادات معتمدة تدعم مستقبلك." },
   { visual: 'headline', icon: '👥', headline: "كل متدرب مختلف", caption: "لأن كل متدرب مختلف... نقدّم لك تجربة تعلم مختلفة." },
   { visual: 'headline', icon: '🚀', headline: "عايز منصة زي دي لمركزك؟", caption: "ليه تبني منصة تدريب من الصفر؟ أي مركز أو أكاديمية تقدر تشترك في المنصة دي وتاخد نسختها الخاصة فورًا: برامجها، متدربينها، وتحكم كامل تحت إيدها هي بس، من غير ما تدفع تكلفة بناء منصة جديدة من الأول." },
+  { visual: 'headline', icon: '🚀', headline: "ابدأ الآن", caption: "ابدأ الآن... طوّر مهاراتك..." },
   { visual: 'logo', caption: "مرحبًا بك في المنصة الذكية التفاعلية للتدريب بمركز التميز العلمي والتكنولوجي." }
-];
-
-// صوت المقدمة المسجّل مسبقًا (Google AI Studio)، ملف mp3 لكل مشهد بنفس ترتيب
-// INTRO_SCENES بالظبط. الملفات مرفوعة على GitHub جنب ملف المنصة في نفس المكان
-// (مش جوه الملف نفسه، عشان حجمه يفضل صغير وGitHub يسمح بتعديله من المتصفح).
-// لو ملف منهم مش موجود، المشهد ده بيتقال بصوت المتصفح القديم كاحتياط. لو المشهد ليه ملف هنا، بيتشغل هو بدل صوت المتصفح.
-// لو غيّرتي نص أي مشهد أو ترتيبه، لازم ملفه هنا يتغيّر معاه.
-const INTRO_VOICE_SRCS = [
-  "intro-01.mp3",
-  "intro-02.mp3",
-  "intro-03.mp3",
-  "intro-04.mp3",
-  "intro-05.mp3",
-  "intro-06.mp3",
-  "intro-07.mp3",
-  "intro-08.mp3",
-  "intro-09.mp3",
-  "intro-10.mp3",
-  "intro-11.mp3"
 ];
 
 let introIndex = 0;
 let introAdvanceTimer = null;
-let introMusic = null;
-let introMusicDone = Promise.resolve();
 
 function renderIntroScene(idx){
   const scene = INTRO_SCENES[idx];
   const visualEl = document.getElementById('introVisual');
   const logoSrc = document.querySelector('.brand .mark img').src;
   visualEl.classList.toggle('intro-visual-cover', scene.visual === 'cover');
-  const introBodyEl = visualEl.closest('.intro-body');
-  if(introBodyEl) introBodyEl.classList.toggle('intro-cover-mode', scene.visual === 'cover');
   if(scene.visual === 'cover'){
     visualEl.innerHTML = `<div class="logo-wrap"><img src="${INTRO_COVER_IMG}" style="width:100%;height:auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.4);padding:0;background:none;object-fit:contain;">${scene.tagline ? `<div class="headline" style="font-size:20px;margin-top:12px;">${escapeHtml(scene.tagline)}</div>` : ''}</div>`;
   } else if(scene.visual === 'logo'){
@@ -4312,59 +4151,10 @@ function renderIntroScene(idx){
   document.getElementById('introPrevBtn').disabled = idx === 0;
 }
 
-// بيشغّل ملف الصوت المسجّل للمشهد للآخر، وبعد ما يخلص بيستنى ثانية
-// واحدة وبعدين يقلب للمشهد اللي بعده - من غير أي حد أقصى للوقت، عشان
-// الكلام ميتقصّش أبدًا مهما كان المشهد طويل.
-async function playIntroRecordedScene(idx, waitForMusic){
-  const avatar = document.getElementById('introAvatar');
-  stopAllSpeech();
-  const myGen = speechGeneration;
-  const advance = () => {
-    if(myGen !== speechGeneration || introIndex !== idx) return;
-    avatar.classList.remove('speaking');
-    if(idx < INTRO_SCENES.length - 1) playIntroScene(idx + 1);
-    else finishIntro();
-  };
-  // أول مشهد بس: نستنى الموسيقى الافتتاحية تخلص الأول وبعدين نبدأ الكلام.
-  if(waitForMusic) await introMusicDone;
-  if(myGen !== speechGeneration || introIndex !== idx) return;
-  const audio = new Audio(INTRO_VOICE_SRCS[idx]);
-  audio.volume = 1;
-  currentAudio = audio;
-  audio.onended = () => { introAdvanceTimer = setTimeout(advance, 1000); };
-  audio.onerror = () => {
-    // الملف مش موجود أو مش راضي يشتغل: نرجع لصوت المتصفح للمشهد ده بس.
-    if(myGen !== speechGeneration || introIndex !== idx) return;
-    playIntroScene(idx, { forceBrowser: true });
-  };
-  const start = () => audio.play().then(() => {
-    avatar.classList.add('speaking');
-  });
-  try{
-    await start();
-  }catch(e){
-    // بعض المتصفحات بتمنع تشغيل الصوت تلقائيًا قبل ما المستخدم يلمس الصفحة
-    // (زي لما المقدمة تفتح لوحدها في زيارة تانية). في الحالة دي بنستنى أول
-    // لمسة/ضغطة في أي مكان وبنشغّل الصوت ساعتها من أول المشهد.
-    const retry = () => {
-      document.removeEventListener('pointerdown', retry, true);
-      document.removeEventListener('keydown', retry, true);
-      if(myGen !== speechGeneration || introIndex !== idx) return;
-      start().catch(() => { introAdvanceTimer = setTimeout(advance, 6000); });
-    };
-    document.addEventListener('pointerdown', retry, true);
-    document.addEventListener('keydown', retry, true);
-  }
-}
-
-async function playIntroScene(idx, opts){
+async function playIntroScene(idx){
   introIndex = idx;
   clearTimeout(introAdvanceTimer);
   renderIntroScene(idx);
-  if(INTRO_VOICE_SRCS[idx] && !(opts && opts.forceBrowser)){
-    playIntroRecordedScene(idx, !!(opts && opts.waitForMusic));
-    return;
-  }
   const avatar = document.getElementById('introAvatar');
   avatar.classList.add('speaking');
   const scene = INTRO_SCENES[idx];
@@ -4414,21 +4204,11 @@ function startIntro(){
   // لأن بعض المتصفحات بتمنع تشغيل صوت تلقائي من غير تفاعل مسبق من المستخدم؛
   // في الحالة دي المشهد بيكمل عادي من غير موسيقى بدل ما يوقف أو يدي خطأ.
   try{
-    if(introMusic){ introMusic.pause(); }
     const music = new Audio(INTRO_MUSIC_SRC);
-    introMusic = music;
     music.volume = 0.55;
-    // الكلام بيبدأ بعد ما الموسيقى تخلص. لو الموسيقى اتمنعت أو حصل فيها خطأ،
-    // الكلام بيبدأ على طول؛ وفيه حد أقصى 25 ثانية كاحتياط.
-    introMusicDone = new Promise(resolve => {
-      const done = () => resolve();
-      music.addEventListener('ended', done, { once: true });
-      music.addEventListener('error', done, { once: true });
-      setTimeout(done, 25000);
-      music.play().catch(done);
-    });
-  }catch(e){ console.error(e); introMusicDone = Promise.resolve(); }
-  playIntroScene(0, { waitForMusic: true });
+    music.play().catch(() => {});
+  }catch(e){ console.error(e); }
+  playIntroScene(0);
 }
 
 document.getElementById('introSkipBtn').addEventListener('click', finishIntro);
