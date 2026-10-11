@@ -1285,6 +1285,11 @@ const translations = {
     btn_delete_translated_now: "🗑️ حذف برنامج الترجمة نهائيًا (ID: {id})",
     confirm_delete_translated: "هل أنت متأكدة تمامًا؟ سيتم حذف البرنامج (ID: {id}) نهائيًا من Firestore ولا يمكن التراجع عن هذا الحذف. تأكدي أولاً أن الدمج نجح وأن كل الترجمة انتقلت فعلاً.",
     delete_translated_done: "✅ تم حذف برنامج الترجمة المنفصل نهائيًا.",
+    danger_zone_header: "⚠️ منطقة الخطر",
+    danger_zone_delete_hint: "حذف البرنامج ده نهائي من قاعدة البيانات ومينفعش يتراجع عنه. شوفي البيانات المرتبطة بيه تحت قبل ما تقرري.",
+    btn_delete_program: "🗑️ حذف هذا البرنامج نهائيًا",
+    confirm_delete_program: "هل أنت متأكدة تمامًا من حذف برنامج \"{title}\" نهائيًا؟ أي بيانات مرتبطة بيه (طلبات تسجيل أو سجلات تقدم) هتفضل موجودة من غير برنامج تتبعله، والبرنامج نفسه مش هينفع يترجع تاني.",
+    delete_program_done: "✅ تم حذف البرنامج نهائيًا.",
     split_section_header: "✂️ فصل الترجمة المدموجة لبرنامج منفصل تاني (رجوع للوضع القديم)",
     split_section_hint: "بتاخد برنامج دُمجت فيه ترجمة قبل كده (زي \"تركيبات كهربائية\")، وتطلّع النسخة الإنجليزية منه كبرنامج منفصل جديد تمامًا (زي قبل الدمج بالظبط)، وترجّع البرنامج الأصلي لشكله العربي البسيط. أول دوسة بتعمل معاينة بس (DRY RUN) من غير أي كتابة.",
     split_original_id_label: "ID البرنامج المدموج المطلوب فصله",
@@ -1841,6 +1846,11 @@ const translations = {
     btn_delete_translated_now: "🗑️ Permanently delete the translation program (ID: {id})",
     confirm_delete_translated: "Are you completely sure? Program (ID: {id}) will be permanently deleted from Firestore and this cannot be undone. First make sure the merge succeeded and all translations were actually moved.",
     delete_translated_done: "✅ The separate translation program was permanently deleted.",
+    danger_zone_header: "⚠️ Danger Zone",
+    danger_zone_delete_hint: "Deleting this program is permanent and cannot be undone. Review the linked data below before deciding.",
+    btn_delete_program: "🗑️ Permanently delete this program",
+    confirm_delete_program: "Are you completely sure you want to permanently delete the program \"{title}\"? Any linked data (enrollment requests or progress records) will remain without a program to reference, and the program itself cannot be recovered.",
+    delete_program_done: "✅ Program permanently deleted.",
     split_section_header: "✂️ Split merged translation back into a separate program (revert)",
     split_section_hint: "Takes a program that previously had a translation merged into it (like \"Electrical Installations\" / تركيبات كهربائية), extracts its English version into a brand-new standalone program (exactly like before the merge), and reverts the original program back to plain Arabic. The first click only previews (DRY RUN) — nothing is written.",
     split_original_id_label: "ID of the merged program to split",
@@ -4453,9 +4463,52 @@ function renderContentTab(el, p){
     <div class="row" style="margin-top:10px;">
       <button class="btn btn-ghost" id="translateProgramBtn" type="button">${i18n('btn_translate_program')}</button>
     </div>
+  </div>
+  <div class="step-divider" style="margin-top:22px;">
+    <h3 style="margin:0;color:#9a3b41;">${i18n('danger_zone_header')}</h3>
+    <div class="hint" style="margin-top:2px;">${i18n('danger_zone_delete_hint')}</div>
+  </div>
+  <div class="card" style="margin-top:10px;">
+    <div class="row">
+      <button class="btn btn-danger" id="deleteProgramBtn" type="button">${i18n('btn_delete_program')}</button>
+    </div>
+    <div id="deleteProgramResult" style="margin-top:14px;"></div>
   </div>`;
   el.innerHTML = html;
   renderMiniModuleList(document.getElementById('miniModuleList'), p);
+
+  document.getElementById('deleteProgramBtn').addEventListener('click', () => {
+    const safety = analyzeProgramDeletionSafety(p.id);
+    const resultEl = document.getElementById('deleteProgramResult');
+    let out = `<div>${i18n('groupid_delete_check_requests', { total: safety.requests.total, approved: safety.requests.approved, pending: safety.requests.pending, rejected: safety.requests.rejected })}</div>`;
+    out += `<div style="margin-top:4px;">${i18n('groupid_delete_check_progress', { entries: safety.progress.entriesCount, trainees: safety.progress.distinctTrainees })}</div>`;
+    out += `<div style="margin-top:4px;">${i18n('groupid_delete_check_certs', { n: safety.certificates.eligibleCount })}</div>`;
+    out += `<div style="margin-top:4px;">${i18n('groupid_delete_check_modules', { modules: safety.modulesAndQuiz.moduleCount, quiz: safety.modulesAndQuiz.quizCount })}</div>`;
+    out += `<div style="margin-top:4px;">${i18n('groupid_delete_check_translation_ref', { n: safety.referencedAsSourceBy.length })}</div>`;
+    out += `<div style="margin-top:10px;font-weight:700;">${safety.safeToDelete ? i18n('groupid_delete_check_safe_yes') : i18n('groupid_delete_check_safe_no')}</div>`;
+    out += `<div class="row" style="margin-top:14px;">
+      <button class="btn btn-danger" id="confirmDeleteProgramBtn" type="button">${i18n('btn_delete_program')}</button>
+    </div>`;
+    resultEl.innerHTML = out;
+
+    document.getElementById('confirmDeleteProgramBtn').addEventListener('click', async () => {
+      if(!confirm(i18n('confirm_delete_program', { title: p.title }))) return;
+      const confirmBtn = document.getElementById('confirmDeleteProgramBtn');
+      confirmBtn.disabled = true;
+      try{
+        await deleteDoc(doc(currentDb(), 'programs', p.id));
+        state.programs = state.programs.filter(x => x.id !== p.id);
+        state.trainerView = 'dashboard';
+        state.trainerSelectedProgramId = null;
+        alert(i18n('delete_program_done'));
+        renderAll();
+      }catch(e){
+        console.error(e);
+        alert(i18n('err_generic_retry'));
+        confirmBtn.disabled = false;
+      }
+    });
+  });
 
   document.getElementById('saveProgBtn').addEventListener('click', async () => {
     p.title = document.getElementById('progTitle').value.trim() || p.title;
