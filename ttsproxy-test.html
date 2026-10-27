@@ -499,6 +499,14 @@
       <option value="azure" data-i18n="tts_opt_azure">Microsoft Azure — صوت مصري طبيعي (Salma / Shakir)</option>
       <option value="elevenlabs" data-i18n="tts_opt_eleven">ElevenLabs</option>
     </select>
+    <label class="small" style="margin-top:10px;">سرعة كلام المحاضر (بتتطبق فورًا للتجربة، وبتتحفظ لما تدوسي حفظ)</label>
+    <select id="ttsSpeechRate">
+      <option value="0.8">أبطأ (0.8)</option>
+      <option value="0.85">بطيء شوية (0.85)</option>
+      <option value="0.9">متوسط (0.9) — الافتراضي</option>
+      <option value="0.95">أسرع شوية (0.95)</option>
+      <option value="1">سرعة Azure الأصلية (1)</option>
+    </select>
 
     <div id="azureFields" style="display:none;margin-top:10px;">
       <div class="hint" style="margin:0 0 8px;">🔒 مفتاح Azure والـ Region محفوظين بأمان في سيرفر الصوت (stce-tts-proxy)، ومش محتاجين يتكتبوا هنا.</div>
@@ -6930,6 +6938,27 @@ async function fetchAzureSpeechAudio(text, apiKey, region, voiceName){
 // أول جزء صغير بيجهز في ثواني ويبدأ يتسمع، والأجزاء اللي بعده بتتجهز في الخلفية.
 // بنستخدم نفس عنصر الصوت لكل الأجزاء (مهم لموبايلات iPhone)، و"onended" اللي
 // باقي المنصة بتحطه بيتنادى مرة واحدة بس في آخر جزء.
+// سرعة الكلام بتتظبط وقت التشغيل (playbackRate مع الحفاظ على طبقة الصوت)، فبتشتغل
+// على الصوت المتخزن والجديد من غير ما نحتاج نعيد التوليد.
+function ttsPlaybackRate(){
+  const r = Number((state.ttsSettings || {}).rate);
+  return (r >= 0.5 && r <= 1.5) ? r : 0.9;
+}
+function applyTtsRate(audio){
+  try{
+    const r = ttsPlaybackRate();
+    audio.preservesPitch = true;
+    audio.defaultPlaybackRate = r;
+    audio.playbackRate = r;
+  }catch(e){ /* ignore */ }
+}
+(function initTtsRateSelect(){
+  const sel = document.getElementById('ttsSpeechRate');
+  if(sel) sel.addEventListener('change', () => {
+    state.ttsSettings = Object.assign({}, state.ttsSettings || {}, { rate: Number(sel.value) || 0.9 });
+    if(currentAudio) applyTtsRate(currentAudio);
+  });
+})();
 const TTS_FIRST_CHUNK_CHARS = 450;
 const TTS_NEXT_CHUNK_CHARS = 1800;
 function splitSpeechText(text, maxLen){
@@ -6981,6 +7010,7 @@ async function playTtsProgressive(provider, text, voice, myGen){
   let nextPromise = parts.length > 1 ? fetchPart(1).catch(e => e) : null;
   let currentUrl = URL.createObjectURL(firstBlob);
   audio.src = currentUrl;
+  applyTtsRate(audio);
   audio.addEventListener('ended', async () => {
     if(myGen !== speechGeneration) return;
     try{ URL.revokeObjectURL(currentUrl); }catch(e){ /* ignore */ }
@@ -6996,6 +7026,7 @@ async function playTtsProgressive(provider, text, voice, myGen){
     nextPromise = (idx + 1 < parts.length) ? fetchPart(idx + 1).catch(e => e) : null;
     currentUrl = URL.createObjectURL(blob);
     audio.src = currentUrl;
+    applyTtsRate(audio);
     currentAudio = audio;
     try{ await audio.play(); }
     catch(e){ console.error('tts part play failed', e); finish(); }
@@ -7113,6 +7144,7 @@ async function tryPlayFromTtsCache(text, provider, tts, myGen){
     const url = URL.createObjectURL(blob);
     currentAudio = new Audio(url);
     currentAudio.volume = 1;
+    applyTtsRate(currentAudio);
     await currentAudio.play();
     return { handled: true, player: currentAudio };
   }catch(e){
@@ -7751,6 +7783,7 @@ document.getElementById('voiceSettingsBtn').addEventListener('click', () => {
 
   // مصدر الصوت المختار حاليًا (لو إعدادات قديمة من قبل إضافة Azure، بنستنتجه
   // من المفاتيح المحفوظة بنفس منطق speakSmart)
+  document.getElementById('ttsSpeechRate').value = String(ttsPlaybackRate());
   document.getElementById('ttsProvider').value = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
   syncTtsProviderFields();
 
@@ -7783,6 +7816,7 @@ document.getElementById('saveTtsBtn').addEventListener('click', async () => {
     provider: document.getElementById('ttsProvider').value,
     apiKey: '',
     voiceId: voiceId,
+    rate: Number(document.getElementById('ttsSpeechRate').value) || 0.9,
     azureKey: '',
     azureRegion: '',
     azureVoice: azureVoice,
