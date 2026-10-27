@@ -6925,6 +6925,85 @@ function escapeForSsml(text){
 async function fetchAzureSpeechAudio(text, apiKey, region, voiceName){
   return fetchTtsViaProxy('azure', text, voiceName);
 }
+// === تشغيل تدريجي للصوت (stce-tts-proxy) ===
+// بدل ما المتدرب يستنى الشرح كله يتولّد (ممكن أكتر من دقيقة)، بنقسّمه لأجزاء:
+// أول جزء صغير بيجهز في ثواني ويبدأ يتسمع، والأجزاء اللي بعده بتتجهز في الخلفية.
+// بنستخدم نفس عنصر الصوت لكل الأجزاء (مهم لموبايلات iPhone)، و"onended" اللي
+// باقي المنصة بتحطه بيتنادى مرة واحدة بس في آخر جزء.
+const TTS_FIRST_CHUNK_CHARS = 450;
+const TTS_NEXT_CHUNK_CHARS = 1800;
+function splitSpeechText(text, maxLen){
+  const parts = [];
+  let rest = String(text || '').trim();
+  while(rest.length > maxLen){
+    const win = rest.slice(0, maxLen);
+    let cut = -1;
+    for(const mark of ['\n', '.', '؟', '?', '!', '؛', '،', ',', ' ']){
+      const i = win.lastIndexOf(mark);
+      if(i > maxLen * 0.5){ cut = i + 1; break; }
+    }
+    if(cut < 0) cut = maxLen;
+    parts.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if(rest) parts.push(rest);
+  return parts.filter(Boolean);
+}
+// لأداة التوليد: نفس التقسيم، بس بنجمّع الأجزاء في ملف واحد عشان يتخزن. كل طلب
+// للسيرفر صغير (جزء واحد) بدل طلب واحد طويل جدًا ممكن يتقطع.
+async function fetchTtsLongViaProxy(provider, text, voice, onPart){
+  const parts = splitSpeechText(text, TTS_NEXT_CHUNK_CHARS);
+  const blobs = [];
+  for(let i = 0; i < parts.length; i++){
+    if(onPart) onPart(i + 1, parts.length);
+    let blob;
+    try{ blob = await fetchTtsViaProxy(provider, parts[i], voice); }
+    catch(e){ await new Promise(r => setTimeout(r, 8000)); blob = await fetchTtsViaProxy(provider, parts[i], voice); }
+    blobs.push(blob);
+    if(i < parts.length - 1) await new Promise(r => setTimeout(r, 3200));
+  }
+  return new Blob(blobs, { type: 'audio/mpeg' });
+}
+async function playTtsProgressive(provider, text, voice, myGen){
+  const clean = String(text || '').trim();
+  const head = splitSpeechText(clean, TTS_FIRST_CHUNK_CHARS)[0] || clean;
+  const tail = clean.slice(head.length).trim();
+  const parts = [head].concat(tail ? splitSpeechText(tail, TTS_NEXT_CHUNK_CHARS) : []);
+  const fetchPart = (i) => fetchTtsViaProxy(provider, parts[i], voice);
+  const firstBlob = await fetchPart(0);
+  if(myGen !== speechGeneration) return null;
+  const audio = new Audio();
+  audio.volume = 1;
+  let finalHandler = null;
+  Object.defineProperty(audio, 'onended', { configurable: true, get(){ return finalHandler; }, set(fn){ finalHandler = fn; } });
+  const finish = () => { try{ if(typeof finalHandler === 'function') finalHandler(); }catch(e){ console.error(e); } };
+  let idx = 0;
+  let nextPromise = parts.length > 1 ? fetchPart(1).catch(e => e) : null;
+  let currentUrl = URL.createObjectURL(firstBlob);
+  audio.src = currentUrl;
+  audio.addEventListener('ended', async () => {
+    if(myGen !== speechGeneration) return;
+    try{ URL.revokeObjectURL(currentUrl); }catch(e){ /* ignore */ }
+    idx++;
+    if(idx >= parts.length || !nextPromise){ finish(); return; }
+    let blob = await nextPromise;
+    if(myGen !== speechGeneration) return;
+    if(blob instanceof Error){
+      try{ blob = await fetchPart(idx); }
+      catch(e){ console.error('tts part failed', idx, e); finish(); return; }
+      if(myGen !== speechGeneration) return;
+    }
+    nextPromise = (idx + 1 < parts.length) ? fetchPart(idx + 1).catch(e => e) : null;
+    currentUrl = URL.createObjectURL(blob);
+    audio.src = currentUrl;
+    currentAudio = audio;
+    try{ await audio.play(); }
+    catch(e){ console.error('tts part play failed', e); finish(); }
+  });
+  currentAudio = audio;
+  await audio.play();
+  return audio;
+}
 /**
  * Speaks text using Azure or ElevenLabs if configured (chosen by the saved provider),
  * otherwise falls back to the browser's built-in speech synthesis. Returns either an
@@ -6951,13 +7030,7 @@ async function speakSmart(text, opts){
   if(provider === 'azure'){
     try{
       const azureVoiceName = (state.lang === 'en') ? (tts.azureVoiceEn || DEFAULT_AZURE_VOICE_EN) : (tts.azureVoice || DEFAULT_AZURE_VOICE);
-      const blob = await fetchAzureSpeechAudio(text, tts.azureKey, tts.azureRegion, azureVoiceName);
-      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
-      const url = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.volume = 1;
-      await currentAudio.play();
-      return currentAudio;
+      return await playTtsProgressive('azure', text, azureVoiceName, myGen);
     }catch(e){
       if(myGen !== speechGeneration) return null;
       console.error('Azure TTS failed, falling back to browser voice', e);
@@ -6971,13 +7044,7 @@ async function speakSmart(text, opts){
 
   if(provider === 'elevenlabs'){
     try{
-      const blob = await fetchElevenLabsAudio(text, tts.apiKey, tts.voiceId || DEFAULT_VOICE_ID);
-      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
-      const url = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.volume = 1;
-      await currentAudio.play();
-      return currentAudio;
+      return await playTtsProgressive('elevenlabs', text, tts.voiceId || DEFAULT_VOICE_ID, myGen);
     }catch(e){
       if(myGen !== speechGeneration) return null;
       console.error('ElevenLabs TTS failed, falling back to browser voice', e);
@@ -7150,7 +7217,7 @@ async function generateTtsCacheForProgram(){
         if(await ttsCacheExists(key)){ skipped++; continue; }
         stage = 'voice';
         const blob = (provider === 'azure')
-          ? await fetchAzureSpeechAudio(text, null, null, voice)
+          ? await fetchTtsLongViaProxy('azure', text, voice, (k, n) => say(`(${i + 1}/${modules.length}) ${mTitle}… جزء ${k} من ${n}`))
           : await fetchElevenLabsAudio(text, tts.apiKey, voice);
         stage = 'save';
         await ttsCachePut(key, blob, `${p.title} / ${mTitle}`, token);
