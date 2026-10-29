@@ -499,12 +499,27 @@
       <option value="azure" data-i18n="tts_opt_azure">Microsoft Azure — صوت مصري طبيعي (Salma / Shakir)</option>
       <option value="elevenlabs" data-i18n="tts_opt_eleven">ElevenLabs</option>
     </select>
+    <label class="small" style="margin-top:10px;">سرعة كلام المحاضر (بتتطبق فورًا للتجربة، وبتتحفظ لما تدوسي حفظ)</label>
+    <select id="ttsSpeechRate">
+      <option value="0.8">أبطأ (0.8)</option>
+      <option value="0.85">بطيء شوية (0.85)</option>
+      <option value="0.9">متوسط (0.9) — الافتراضي</option>
+      <option value="0.95">أسرع شوية (0.95)</option>
+      <option value="1">سرعة Azure الأصلية (1)</option>
+    </select>
+    <label class="small" style="margin-top:12px;">📖 قاموس النطق — كل سطر: الكلمة = طريقة نطقها (ممكن بالتشكيل)</label>
+    <textarea id="ttsLexiconInput" rows="5" dir="rtl" style="width:100%;font-family:inherit;" placeholder="عشان = عَشان&#10;CNC = سي إن سي"></textarea>
+    <button class="btn btn-ghost" id="ttsLexiconSaveBtn" type="button" style="margin-top:6px;">حفظ القاموس</button>
+    <div class="hint" id="ttsLexiconStatus" style="margin-top:4px;">زرار «حفظ القاموس» بيحفظ القاموس لوحده ومش بيلمس إعدادات الصوت ولا المفاتيح.</div>
 
     <div id="azureFields" style="display:none;margin-top:10px;">
+      <div class="hint" style="margin:0 0 8px;">🔒 مفتاح Azure والـ Region محفوظين بأمان في سيرفر الصوت (stce-tts-proxy)، ومش محتاجين يتكتبوا هنا.</div>
+      <div style="display:none;">
       <label class="small" data-i18n="azure_apikey_label">Azure Speech API Key</label>
       <input type="password" id="azureApiKey" placeholder="...">
       <label class="small" data-i18n="azure_region_label">Azure Region (مثال: eastus, westeurope — زي ما هو مكتوب في حسابك)</label>
       <input type="text" id="azureRegion" placeholder="eastus">
+      </div>
       <label class="small" data-i18n="azure_voice_label">اختاري صوت</label>
       <select id="azureVoicePreset">
         <option value="ar-EG-SalmaNeural" data-i18n="azure_voice_salma">Salma — حريمي مصري</option>
@@ -525,8 +540,11 @@
     </div>
 
     <div id="elevenFields" style="display:none;margin-top:10px;">
+      <div class="hint" style="margin:0 0 8px;">🔒 مفتاح ElevenLabs محفوظ بأمان في سيرفر الصوت (stce-tts-proxy).</div>
+      <div style="display:none;">
       <label class="small" data-i18n="eleven_apikey_label">ElevenLabs API Key</label>
       <input type="password" id="ttsApiKey" placeholder="sk_...">
+      </div>
       <label class="small" data-i18n="eleven_voice_label">اختاري صوت</label>
       <select id="ttsVoicePreset">
         <option value="pNInz6obpgDQGcFmaJgB" data-i18n="el_v_adam">Adam — رجالي</option>
@@ -543,11 +561,25 @@
     <div id="ttsCacheSection" style="display:none;margin-top:14px;padding:12px;border:1px dashed #c9d6e8;border-radius:10px;">
       <label class="small" style="font-weight:700;">💾 تخزين صوت البرامج (توفير رصيد الصوت)</label>
       <div class="hint">بيولّد صوت شرح كل وحدات البرنامج مرة واحدة ويحفظه. بعدها المتدربين بيسمعوا من الملف المحفوظ ومش بيتخصم رصيد. احفظي إعدادات الصوت الأول قبل التوليد.</div>
+      <label class="small" style="margin-top:8px;">مصدر صوت التخزين</label>
+      <select id="ttsCacheSource">
+        <option value="gemini">Gemini TTS — صوت طبيعي (حوالي 10 طلبات في اليوم مجانًا)</option>
+        <option value="azure">Azure (مصدر الصوت الحالي)</option>
+      </select>
+      <div id="geminiTtsBox" style="margin-top:8px;">
+        <label class="small">صوت Gemini</label>
+        <input type="text" id="geminiTtsVoice" dir="ltr" placeholder="Kira" style="width:100%;">
+        <div class="hint" style="margin-top:2px;">اكتبي اسم الصوت زي ما هو في AI Studio (مثلاً Kira). لما تدوسي حفظ، المنصة هتدوّر عليه في مكتبة أصوات Gemini.</div>
+        <label class="small" style="margin-top:6px;">أسلوب الكلام</label>
+        <textarea id="geminiTtsStyle" rows="2" dir="rtl" style="width:100%;font-family:inherit;"></textarea>
+        <button class="btn btn-ghost" id="geminiTtsSaveBtn" type="button" style="margin-top:6px;">حفظ إعدادات Gemini</button>
+        <div class="hint" id="geminiTtsStatus">الزرار ده بيحفظ إعدادات Gemini لوحدها ومش بيلمس المفاتيح.</div>
+      </div>
       <select id="ttsCacheProgramSelect" style="margin-top:8px;"></select>
       <button class="btn btn-ghost" id="ttsCacheGenerateBtn" type="button" style="margin-top:8px;">توليد وتخزين صوت البرنامج</button>
       <div class="hint" id="ttsCacheStatus" style="margin-top:6px;"></div>
     </div>
-    <div class="hint" style="color:#9a3b41;margin-top:10px;" data-i18n="tts_security_hint">⚠️ تنبيه أمان: أي مفتاح تحطيه هنا بيتخزن ويشتغل من متصفح أي حد بيفتح المنصة (المحاضر أو المتدرب)، يعني ممكن يظهر لأي حد يفتح أدوات المطور في المتصفح. متحطيش مفتاح فيه رصيد كبير، وراجعي حدود الاستخدام في حسابك بشكل دوري.</div>
+    <div class="hint" style="color:#9a3b41;margin-top:10px;" data-i18n="tts_security_hint">🔒 مفاتيح الصوت مش بتتخزن في المنصة ولا في Firebase. هي محفوظة كـ Secret في سيرفر الصوت stce-tts-proxy على Cloudflare، والمنصة بتطلب الصوت منه بس.</div>
     <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
     <label class="small" data-i18n="aiWorkerUrl_label">رابط سيرفر الذكاء الاصطناعي (لتشغيل "المدرب الذكي" اللي بيرد على أسئلة المتدربين)</label>
     <input type="text" id="aiWorkerUrl" placeholder="https://...workers.dev">
@@ -834,7 +866,7 @@ const translations = {
     el_v_rachel: "Rachel — حريمي",
     el_v_bella: "Bella — حريمي",
     el_v_custom: "مخصص — حطي Voice ID بنفسك",
-    tts_security_hint: "⚠️ تنبيه أمان: أي مفتاح تحطيه هنا بيتخزن ويشتغل من متصفح أي حد بيفتح المنصة (المحاضر أو المتدرب)، يعني ممكن يظهر لأي حد يفتح أدوات المطور في المتصفح. متحطيش مفتاح فيه رصيد كبير، وراجعي حدود الاستخدام في حسابك بشكل دوري.",
+    tts_security_hint: "🔒 مفاتيح الصوت مش بتتخزن في المنصة ولا في Firebase. هي محفوظة كـ Secret في سيرفر الصوت stce-tts-proxy على Cloudflare، والمنصة بتطلب الصوت منه بس.",
     aiWorkerUrl_label: "رابط سيرفر الذكاء الاصطناعي (لتشغيل \"المدرب الذكي\" اللي بيرد على أسئلة المتدربين)",
     aiWorkerUrl_hint: "ده رابط سيرفر وسيط صغير ومجاني (Cloudflare Worker) بيحمل مفتاح Gemini بشكل سري تمامًا - مش هيظهر في كود المنصة العام خالص، على عكس مفاتيح الصوت.",
     btn_save: "حفظ",
@@ -1415,7 +1447,7 @@ const translations = {
     el_v_rachel: "Rachel — female",
     el_v_bella: "Bella — female",
     el_v_custom: "Custom — enter the Voice ID yourself",
-    tts_security_hint: "⚠️ Security notice: any key you enter here is stored and runs from the browser of anyone who opens the platform (trainer or trainee), so it may be visible to anyone who opens the browser developer tools. Do not use a key with a large balance, and review your account usage limits regularly.",
+    tts_security_hint: "🔒 Voice keys are not stored in the platform or in Firebase. They are kept as Secrets in the stce-tts-proxy voice server on Cloudflare, and the platform only requests audio from it.",
     aiWorkerUrl_label: "AI server URL (powers the \"AI Trainer\" that answers trainee questions)",
     aiWorkerUrl_hint: "This is a small, free relay server (Cloudflare Worker) that holds the Gemini key completely secretly — it never appears in the platform's public code, unlike the voice keys.",
     btn_save: "Save",
@@ -2746,6 +2778,8 @@ async function loadState(){
     if(cfgSnap.exists()){
       const cfg = cfgSnap.data();
       state.ttsSettings = cfg.ttsSettings || DEFAULT_TTS_SETTINGS;
+      state.ttsLexicon = Array.isArray(cfg.ttsLexicon) ? cfg.ttsLexicon : null;
+      state.geminiTts = (cfg.geminiTts && typeof cfg.geminiTts === 'object') ? cfg.geminiTts : null;
       state.aiSettings = cfg.aiSettings || DEFAULT_AI_SETTINGS;
       state.bankAccount = cfg.bankAccount || DEFAULT_BANK_ACCOUNT;
     } else {
@@ -6885,28 +6919,26 @@ async function speakBrowser(text, opts){
   speakChunk(0);
   return wrapper;
 }
-async function fetchElevenLabsAudio(text, apiKey, voiceId){
-  const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+// === سيرفر الصوت الآمن (stce-tts-proxy) ===
+// المفاتيح بقت جوه Cloudflare Worker، والمنصة بتبعتله النص بس. الدالتين تحت
+// بنفس الأسماء القديمة عشان باقي المنصة ماتتغيرش، بس بقوا بيكلموا السيرفر بدل
+// ما يكلموا Azure/ElevenLabs مباشرة. مُعاملات المفتاح/المنطقة لم تعد مستخدمة.
+const TTS_PROXY_URL = 'https://stce-tts-proxy.abeersalah415.workers.dev';
+async function fetchTtsViaProxy(provider, text, voice){
+  const resp = await fetch(TTS_PROXY_URL + '/tts', {
     method: 'POST',
-    headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: { stability: 0.55, similarity_boost: 0.85 }
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider, text, voice })
   });
   if(!resp.ok){
-    let detail = '';
-    try{
-      const bodyText = await resp.text();
-      try{
-        const parsed = JSON.parse(bodyText);
-        detail = (parsed && parsed.detail && (parsed.detail.message || parsed.detail.status)) || bodyText;
-      }catch(e2){ detail = bodyText; }
-    }catch(e){ /* ignore */ }
-    throw new Error('ElevenLabs request failed: ' + resp.status + (detail ? (' - ' + detail) : ''));
+    let code = '';
+    try{ code = (await resp.json()).error || ''; }catch(e){ /* ignore */ }
+    throw new Error('TTS proxy ' + resp.status + (code ? ' - ' + code : ''));
   }
   return await resp.blob();
+}
+async function fetchElevenLabsAudio(text, apiKey, voiceId){
+  return fetchTtsViaProxy('elevenlabs', text, voiceId);
 }
 // بتهرب الحروف الخاصة (& < > " ') قبل ما ندخل النص جوه SSML لأزيور، عشان لو
 // النص فيه رمز زي & مثلاً الطلب ميفشلش أو يتقطع.
@@ -6919,29 +6951,163 @@ function escapeForSsml(text){
     .replace(/'/g, '&apos;');
 }
 async function fetchAzureSpeechAudio(text, apiKey, region, voiceName){
-  // اسم الصوت دايمًا بالصيغة "لغة-بلد-اسم" (زي ar-EG-SalmaNeural أو en-US-AndrewNeural)،
-  // فبنستخرج الـlocale منه بدل ما نفرضه عربي دايمًا - عشان الصوت الإنجليزي يتقال
-  // باللغة الإنجليزية الصحيحة ومش كـ"عربي" غلط.
-  const localeMatch = voiceName.match(/^([a-zA-Z]{2}-[a-zA-Z]{2})/);
-  const locale = localeMatch ? localeMatch[1] : 'en-US';
-  const femalePattern = /salma|jenny|aria|ava|michelle|zira|susan|sonia|libby/i;
-  const gender = femalePattern.test(voiceName) ? 'Female' : 'Male';
-  const ssml = `<speak version='1.0' xml:lang='${locale}'><voice xml:lang='${locale}' xml:gender='${gender}' name='${voiceName}'>${escapeForSsml(text)}</voice></speak>`;
-  const resp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-    method: 'POST',
-    headers: {
-      'Ocp-Apim-Subscription-Key': apiKey,
-      'Content-Type': 'application/ssml+xml',
-      'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
-    },
-    body: ssml
+  return fetchTtsViaProxy('azure', text, voiceName);
+}
+// === تشغيل تدريجي للصوت (stce-tts-proxy) ===
+// بدل ما المتدرب يستنى الشرح كله يتولّد (ممكن أكتر من دقيقة)، بنقسّمه لأجزاء:
+// أول جزء صغير بيجهز في ثواني ويبدأ يتسمع، والأجزاء اللي بعده بتتجهز في الخلفية.
+// بنستخدم نفس عنصر الصوت لكل الأجزاء (مهم لموبايلات iPhone)، و"onended" اللي
+// باقي المنصة بتحطه بيتنادى مرة واحدة بس في آخر جزء.
+// سرعة الكلام بتتظبط وقت التشغيل (playbackRate مع الحفاظ على طبقة الصوت)، فبتشتغل
+// على الصوت المتخزن والجديد من غير ما نحتاج نعيد التوليد.
+function ttsPlaybackRate(){
+  const r = Number((state.ttsSettings || {}).rate);
+  return (r >= 0.5 && r <= 1.5) ? r : 0.9;
+}
+function applyTtsRate(audio){
+  try{
+    const r = ttsPlaybackRate();
+    audio.preservesPitch = true;
+    audio.defaultPlaybackRate = r;
+    audio.playbackRate = r;
+  }catch(e){ /* ignore */ }
+}
+(function initTtsRateSelect(){
+  const sel = document.getElementById('ttsSpeechRate');
+  if(sel) sel.addEventListener('change', () => {
+    state.ttsSettings = Object.assign({}, state.ttsSettings || {}, { rate: Number(sel.value) || 0.9 });
+    if(currentAudio) applyTtsRate(currentAudio);
   });
-  if(!resp.ok){
-    let detail = '';
-    try{ detail = await resp.text(); }catch(e){ /* ignore */ }
-    throw new Error('Azure Speech request failed: ' + resp.status + (detail ? (' - ' + detail) : ''));
+})();
+// === قاموس النطق ===
+// كلمات بيغلط فيها الصوت بتتبدّل بطريقة نطقها الصح قبل ما النص يروح للصوت (ومن ضمنها
+// بصمة التخزين، فالوحدة اللي فيها كلمة اتصلحت بيتولّد لها صوت جديد صح). الكلمة
+// بتتبدّل كاملة بس، ومعاها حروف البداية (و ف ب ل ك) لو موجودة.
+const DEFAULT_TTS_LEXICON = [
+  { from: 'عشان', to: 'عَشان' },
+  { from: 'علشان', to: 'عَلَشان' }
+];
+function ttsLexicon(){
+  const list = Array.isArray(state.ttsLexicon) ? state.ttsLexicon : DEFAULT_TTS_LEXICON;
+  return list.filter(e => e && typeof e.from === 'string' && typeof e.to === 'string' && e.from.trim() && e.to.trim());
+}
+function escapeRegExp(str){ return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function applyTtsLexicon(text){
+  let out = String(text || '');
+  for(const e of ttsLexicon()){
+    try{
+      const re = new RegExp('(^|[^\\p{L}\\p{M}])([وفبلك]?)' + escapeRegExp(e.from.trim()) + '(?=[^\\p{L}\\p{M}]|$)', 'gu');
+      out = out.replace(re, (m, pre, pfx) => pre + pfx + e.to.trim());
+    }catch(err){ console.warn('lexicon entry skipped', e, err); }
   }
-  return await resp.blob();
+  return out;
+}
+function prepareSpeechText(text){
+  return applyTtsLexicon(stripFormattingForSpeech(text));
+}
+function lexiconToText(list){ return list.map(e => `${e.from} = ${e.to}`).join('\n'); }
+function textToLexicon(txt){
+  return String(txt || '').split('\n').map(line => {
+    const i = line.indexOf('=');
+    if(i < 0) return null;
+    const from = line.slice(0, i).trim(), to = line.slice(i + 1).trim();
+    return (from && to) ? { from, to } : null;
+  }).filter(Boolean).slice(0, 300);
+}
+(function initTtsLexiconUi(){
+  const openBtn = document.getElementById('voiceSettingsBtn');
+  const box = document.getElementById('ttsLexiconInput');
+  const saveBtn = document.getElementById('ttsLexiconSaveBtn');
+  const status = document.getElementById('ttsLexiconStatus');
+  if(openBtn && box) openBtn.addEventListener('click', () => { box.value = lexiconToText(ttsLexicon()); });
+  if(saveBtn && box) saveBtn.addEventListener('click', async () => {
+    const list = textToLexicon(box.value);
+    saveBtn.disabled = true;
+    try{
+      await setDoc(doc(trainerDb, 'platform', 'config'), { ttsLexicon: list }, { merge: true });
+      state.ttsLexicon = list;
+      if(status) status.textContent = `✓ اتحفظ القاموس (${list.length} كلمة).`;
+    }catch(e){
+      console.error('save lexicon failed', e);
+      if(status) status.textContent = 'ماقدرتش أحفظ القاموس. اتأكدي إنك داخلة بحساب STCE.';
+    }finally{ saveBtn.disabled = false; }
+  });
+})();
+const TTS_FIRST_CHUNK_CHARS = 450;
+const TTS_NEXT_CHUNK_CHARS = 1800;
+function splitSpeechText(text, maxLen){
+  const parts = [];
+  let rest = String(text || '').trim();
+  while(rest.length > maxLen){
+    const win = rest.slice(0, maxLen);
+    let cut = -1;
+    for(const mark of ['\n', '.', '؟', '?', '!', '؛', '،', ',', ' ']){
+      const i = win.lastIndexOf(mark);
+      if(i > maxLen * 0.5){ cut = i + 1; break; }
+    }
+    if(cut < 0) cut = maxLen;
+    parts.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if(rest) parts.push(rest);
+  return parts.filter(Boolean);
+}
+// لأداة التوليد: نفس التقسيم، بس بنجمّع الأجزاء في ملف واحد عشان يتخزن. كل طلب
+// للسيرفر صغير (جزء واحد) بدل طلب واحد طويل جدًا ممكن يتقطع.
+async function fetchTtsLongViaProxy(provider, text, voice, onPart){
+  const parts = splitSpeechText(text, TTS_NEXT_CHUNK_CHARS);
+  const blobs = [];
+  for(let i = 0; i < parts.length; i++){
+    if(onPart) onPart(i + 1, parts.length);
+    let blob;
+    try{ blob = await fetchTtsViaProxy(provider, parts[i], voice); }
+    catch(e){ await new Promise(r => setTimeout(r, 8000)); blob = await fetchTtsViaProxy(provider, parts[i], voice); }
+    blobs.push(blob);
+    if(i < parts.length - 1) await new Promise(r => setTimeout(r, 3200));
+  }
+  return new Blob(blobs, { type: 'audio/mpeg' });
+}
+async function playTtsProgressive(provider, text, voice, myGen){
+  const clean = String(text || '').trim();
+  const head = splitSpeechText(clean, TTS_FIRST_CHUNK_CHARS)[0] || clean;
+  const tail = clean.slice(head.length).trim();
+  const parts = [head].concat(tail ? splitSpeechText(tail, TTS_NEXT_CHUNK_CHARS) : []);
+  const fetchPart = (i) => fetchTtsViaProxy(provider, parts[i], voice);
+  const firstBlob = await fetchPart(0);
+  if(myGen !== speechGeneration) return null;
+  const audio = new Audio();
+  audio.volume = 1;
+  let finalHandler = null;
+  Object.defineProperty(audio, 'onended', { configurable: true, get(){ return finalHandler; }, set(fn){ finalHandler = fn; } });
+  const finish = () => { try{ if(typeof finalHandler === 'function') finalHandler(); }catch(e){ console.error(e); } };
+  let idx = 0;
+  let nextPromise = parts.length > 1 ? fetchPart(1).catch(e => e) : null;
+  let currentUrl = URL.createObjectURL(firstBlob);
+  audio.src = currentUrl;
+  applyTtsRate(audio);
+  audio.addEventListener('ended', async () => {
+    if(myGen !== speechGeneration) return;
+    try{ URL.revokeObjectURL(currentUrl); }catch(e){ /* ignore */ }
+    idx++;
+    if(idx >= parts.length || !nextPromise){ finish(); return; }
+    let blob = await nextPromise;
+    if(myGen !== speechGeneration) return;
+    if(blob instanceof Error){
+      try{ blob = await fetchPart(idx); }
+      catch(e){ console.error('tts part failed', idx, e); finish(); return; }
+      if(myGen !== speechGeneration) return;
+    }
+    nextPromise = (idx + 1 < parts.length) ? fetchPart(idx + 1).catch(e => e) : null;
+    currentUrl = URL.createObjectURL(blob);
+    audio.src = currentUrl;
+    applyTtsRate(audio);
+    currentAudio = audio;
+    try{ await audio.play(); }
+    catch(e){ console.error('tts part play failed', e); finish(); }
+  });
+  currentAudio = audio;
+  await audio.play();
+  return audio;
 }
 /**
  * Speaks text using Azure or ElevenLabs if configured (chosen by the saved provider),
@@ -6955,7 +7121,8 @@ async function speakSmart(text, opts){
   // بقى مصدر واحد لزيادة الجيل (جوه stopAllSpeech) بدل ما يتكرر هنا كمان.
   stopAllSpeech();
   const myGen = speechGeneration;
-  text = stripFormattingForSpeech(text);
+  const legacyText = stripFormattingForSpeech(text); // الصوت اللي اتخزن قبل قاموس النطق
+  text = prepareSpeechText(text);
   const tts = state.ttsSettings || {};
   // provider بيتحفظ صريح من شاشة الإعدادات. لو مش موجود (إعدادات قديمة من قبل
   // إضافة Azure)، بنستنتجه من المفاتيح المحفوظة بنفس المنطق القديم.
@@ -6963,19 +7130,13 @@ async function speakSmart(text, opts){
 
   // تخزين الصوت (stce-tts-cache): لو صوت النص ده محفوظ، يتشغّل من المخزن من غير
   // ما يتخصم رصيد. أي فشل هنا = نكمّل بالطريقة القديمة تحت بالظبط.
-  const cacheResult = await tryPlayFromTtsCache(text, provider, tts, myGen);
+  const cacheResult = await tryPlayFromTtsCache(text, provider, tts, myGen, legacyText);
   if(cacheResult.handled) return cacheResult.player;
 
-  if(provider === 'azure' && tts.azureKey && tts.azureRegion){
+  if(provider === 'azure'){
     try{
       const azureVoiceName = (state.lang === 'en') ? (tts.azureVoiceEn || DEFAULT_AZURE_VOICE_EN) : (tts.azureVoice || DEFAULT_AZURE_VOICE);
-      const blob = await fetchAzureSpeechAudio(text, tts.azureKey, tts.azureRegion, azureVoiceName);
-      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
-      const url = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.volume = 1;
-      await currentAudio.play();
-      return currentAudio;
+      return await playTtsProgressive('azure', text, azureVoiceName, myGen);
     }catch(e){
       if(myGen !== speechGeneration) return null;
       console.error('Azure TTS failed, falling back to browser voice', e);
@@ -6987,15 +7148,9 @@ async function speakSmart(text, opts){
     }
   }
 
-  if(provider === 'elevenlabs' && tts.apiKey){
+  if(provider === 'elevenlabs'){
     try{
-      const blob = await fetchElevenLabsAudio(text, tts.apiKey, tts.voiceId || DEFAULT_VOICE_ID);
-      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
-      const url = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.volume = 1;
-      await currentAudio.play();
-      return currentAudio;
+      return await playTtsProgressive('elevenlabs', text, tts.voiceId || DEFAULT_VOICE_ID, myGen);
     }catch(e){
       if(myGen !== speechGeneration) return null;
       console.error('ElevenLabs TTS failed, falling back to browser voice', e);
@@ -7043,33 +7198,216 @@ async function ttsCacheKey(text, provider, voice, lang){
 
 // بيرجّع {handled:true, player} لو الصوت اتشغّل من المخزن (أو لو طلب أحدث
 // سبقه)، أو {handled:false} في أي حالة تانية عشان speakSmart تكمّل عادي.
-async function tryPlayFromTtsCache(text, provider, tts, myGen){
+async function fetchCachedAudio(key){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TTS_CACHE_READ_TIMEOUT_MS);
   try{
-    if(provider !== 'azure' && provider !== 'elevenlabs') return { handled: false };
-    if(!text || !window.crypto || !crypto.subtle) return { handled: false };
-    const voice = ttsCacheVoiceFor(tts, provider, state.lang);
-    const key = await ttsCacheKey(text, provider, voice, state.lang);
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), TTS_CACHE_READ_TIMEOUT_MS);
-    let resp;
-    try{
-      resp = await fetch(`${TTS_CACHE_URL}/a/${key}`, { method: 'GET', signal: ctrl.signal });
-    }finally{
-      clearTimeout(timer);
-    }
-    if(!resp || resp.status !== 200) return { handled: false };
+    const resp = await fetch(`${TTS_CACHE_URL}/a/${key}`, { method: 'GET', signal: ctrl.signal });
+    if(!resp || resp.status !== 200) return null;
     const blob = await resp.blob();
+    return (blob && blob.size) ? blob : null;
+  }catch(e){ return null; }
+  finally{ clearTimeout(timer); }
+}
+// بيدوّر على الصوت المتخزن بصوت Gemini الأول (لو متظبط)، وبعدين بصوت المصدر
+// الحالي (Azure). الاتنين بيتطلبوا مع بعض عشان مايتأخرش.
+async function tryPlayFromTtsCache(text, provider, tts, myGen, legacyText){
+  try{
+    if(!text || !window.crypto || !crypto.subtle) return { handled: false };
+    const lookups = [];
+    const g = geminiTtsConfig();
+    if(g.voice) lookups.push({ kind: 'gemini', key: await geminiCacheKey(text, g) });
+    if(provider === 'azure' || provider === 'elevenlabs'){
+      const voice = ttsCacheVoiceFor(tts, provider, state.lang);
+      lookups.push({ kind: provider, key: await ttsCacheKey(text, provider, voice, state.lang) });
+      // صوت اتخزن قبل إضافة قاموس النطق: نصه كان من غير تصحيحات، فبصمته مختلفة.
+      if(legacyText && legacyText !== text) lookups.push({ kind: provider, key: await ttsCacheKey(legacyText, provider, voice, state.lang) });
+    }
+    if(!lookups.length) return { handled: false };
+    const blobs = await Promise.all(lookups.map(l => fetchCachedAudio(l.key)));
+    const hit = blobs.findIndex(b => !!b);
+    if(hit < 0) return { handled: false };
     if(myGen !== speechGeneration) return { handled: true, player: null };
-    if(!blob || !blob.size) return { handled: false };
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blobs[hit]);
     currentAudio = new Audio(url);
     currentAudio.volume = 1;
+    if(lookups[hit].kind === 'gemini'){ try{ currentAudio.playbackRate = 1; }catch(e){} }
+    else applyTtsRate(currentAudio);
     await currentAudio.play();
     return { handled: true, player: currentAudio };
   }catch(e){
     console.warn('tts cache read skipped', e);
     return { handled: false };
   }
+}
+
+// === Gemini TTS (للتخزين) ===
+// Gemini حدوده المجانية صغيرة (حوالي 3 طلبات في الدقيقة و10 في اليوم)، فبيُستخدم
+// للتخزين بس، مش للتشغيل المباشر. الصوت بيرجع WAV كبير، فبنضغطه MP3 على جهاز
+// الأدمن (مكتبة lamejs) قبل ما يتخزن، عشان مساحة المخزن تكفي.
+const GEMINI_TTS_MODEL_TAG = 'gemini-3.8-flash-tts';
+const GEMINI_PART_CHARS = 3000;
+const GEMINI_PAUSE_MS = 22000;
+const DEFAULT_GEMINI_STYLE = 'مدرّب فني مصري ودود بيشرح لطلابه في الورشة، بلهجة مصرية طبيعية وبسرعة هادية';
+function geminiTtsConfig(){
+  const g = state.geminiTts || {};
+  return { voice: typeof g.voice === 'string' ? g.voice : '', style: (typeof g.style === 'string' && g.style.trim()) ? g.style.trim() : DEFAULT_GEMINI_STYLE };
+}
+async function geminiCacheKey(text, g){
+  return ttsCacheKey(text, 'gemini', `${GEMINI_TTS_MODEL_TAG}|${g.voice}|${g.style}`, state.lang);
+}
+function base64ToBytes(b64){
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function findAudioBase64(resp){
+  let found = null;
+  const walk = (o) => {
+    if(!o || typeof o !== 'object') return;
+    if(Array.isArray(o)){ o.forEach(walk); return; }
+    if(o.type === 'audio' && typeof o.data === 'string') found = o.data;
+    if(o.inlineData && typeof o.inlineData.data === 'string') found = o.inlineData.data;
+    Object.keys(o).forEach(k => { if(k !== 'data') walk(o[k]); });
+  };
+  walk(resp);
+  return found;
+}
+function wavToPcm(bytes){
+  const tag = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
+  if(tag !== 'RIFF') return { samples: new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2)), rate: 24000 };
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let rate = 24000, off = 12;
+  while(off + 8 <= bytes.length){
+    const id = String.fromCharCode(bytes[off], bytes[off + 1], bytes[off + 2], bytes[off + 3]);
+    const size = dv.getUint32(off + 4, true);
+    if(id === 'fmt ') rate = dv.getUint32(off + 12, true);
+    if(id === 'data'){
+      const len = Math.min(size, bytes.length - off - 8);
+      const copy = bytes.slice(off + 8, off + 8 + len - (len % 2));
+      return { samples: new Int16Array(copy.buffer), rate };
+    }
+    off += 8 + size + (size % 2);
+  }
+  throw new Error('wav_no_data');
+}
+async function fetchGeminiPcm(text, g){
+  const resp = await fetch(TTS_PROXY_URL + '/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'gemini', text, voice: g.voice, style: g.style })
+  });
+  if(!resp.ok){
+    let code = '';
+    try{ code = (await resp.json()).error || ''; }catch(e){}
+    const err = new Error('Gemini TTS ' + resp.status + (code ? ' - ' + code : ''));
+    err.status = resp.status; err.code = code;
+    throw err;
+  }
+  const data = await resp.json();
+  const b64 = findAudioBase64(data);
+  if(!b64) throw new Error('gemini_no_audio');
+  return wavToPcm(base64ToBytes(b64));
+}
+let lameLoading = null;
+const LAME_URLS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js',
+  'https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js'
+];
+function loadScriptOnce(src){
+  return new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = src;
+    sc.onload = () => resolve();
+    sc.onerror = () => reject(new Error('load_failed ' + src));
+    document.head.appendChild(sc);
+  });
+}
+function loadLame(){
+  if(window.lamejs) return Promise.resolve(window.lamejs);
+  if(!lameLoading) lameLoading = (async () => {
+    for(const u of LAME_URLS){
+      try{ await loadScriptOnce(u); if(window.lamejs) return window.lamejs; }catch(e){ console.warn(e); }
+    }
+    lameLoading = null;
+    throw new Error('lame_load_failed');
+  })();
+  return lameLoading;
+}
+async function pcmToMp3(samples, rate){
+  const lame = await loadLame();
+  const enc = new lame.Mp3Encoder(1, rate, 48);
+  const out = [];
+  const block = 1152;
+  for(let i = 0; i < samples.length; i += block){
+    const buf = enc.encodeBuffer(samples.subarray(i, i + block));
+    if(buf.length) out.push(new Uint8Array(buf));
+    if(i % (block * 400) === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  const end = enc.flush();
+  if(end.length) out.push(new Uint8Array(end));
+  return new Blob(out, { type: 'audio/mpeg' });
+}
+// أجزاء Gemini اللي اتولّدت بتتحفظ على جهاز الأدمن (IndexedDB) أول ما تخلص، عشان
+// لو الحد اليومي خلص في نص وحدة، بكرة نكمّل من الجزء اللي بعده بدل ما نعيد اللي اتعمل.
+function partsDb(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('stce-gemini-parts', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('parts');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function partGet(key){
+  try{
+    const db = await partsDb();
+    return await new Promise((resolve) => {
+      const r = db.transaction('parts').objectStore('parts').get(key);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    });
+  }catch(e){ return null; }
+}
+async function partPut(key, blob){
+  try{
+    const db = await partsDb();
+    await new Promise((resolve) => {
+      const tx = db.transaction('parts', 'readwrite');
+      tx.objectStore('parts').put(blob, key);
+      tx.oncomplete = resolve; tx.onerror = resolve;
+    });
+  }catch(e){ console.warn('part save skipped', e); }
+}
+async function partDel(keys){
+  try{
+    const db = await partsDb();
+    const tx = db.transaction('parts', 'readwrite');
+    keys.forEach(k => tx.objectStore('parts').delete(k));
+  }catch(e){ /* ignore */ }
+}
+let lastGeminiRequestAt = 0;
+async function generateGeminiAudio(text, g, onPart){
+  const parts = splitSpeechText(text, GEMINI_PART_CHARS);
+  const blobs = [], keys = [];
+  let requests = 0;
+  for(let i = 0; i < parts.length; i++){
+    if(onPart) onPart(i + 1, parts.length);
+    const pk = await ttsCacheKey(parts[i], 'gemini-part', `${GEMINI_TTS_MODEL_TAG}|${g.voice}|${g.style}`, state.lang);
+    keys.push(pk);
+    let mp3 = await partGet(pk);
+    if(!mp3){
+      const wait = GEMINI_PAUSE_MS - (Date.now() - lastGeminiRequestAt);
+      if(lastGeminiRequestAt && wait > 0) await new Promise(r => setTimeout(r, wait));
+      lastGeminiRequestAt = Date.now();
+      const pcm = await fetchGeminiPcm(parts[i], g);
+      requests++;
+      mp3 = await pcmToMp3(pcm.samples, pcm.rate);
+      await partPut(pk, mp3);
+    }
+    blobs.push(mp3);
+  }
+  return { blob: new Blob(blobs, { type: 'audio/mpeg' }), requests, partKeys: keys };
 }
 
 // ===== جهة الأدمن: كلمة سر المخزن + توليد صوت برنامج كامل =====
@@ -7117,62 +7455,7 @@ async function ttsCachePut(key, blob, label, token){
   }
 }
 
-// Azure بيرفض (400) النص الطويل اللي صوته أكتر من ~10 دقايق في طلب واحد، فبنقسّم
-// الشرح لأجزاء عند نهايات الجمل، ونولّد كل جزء لوحده، ونجمّع ملفات MP3 في ملف
-// واحد (نفس الصيغة بالظبط، فبيتشغّلوا ورا بعض عادي). الجودة 64kbps كفاية للكلام
-// وبتوفّر نص المساحة. الدالة دي جديدة ومنفصلة؛ fetchAzureSpeechAudio الأصلية زي ما هي.
-const TTS_CACHE_CHUNK_CHARS = 2200;
-function splitTextForTts(text, maxLen){
-  const parts = [];
-  let rest = String(text || '').trim();
-  while(rest.length > maxLen){
-    let cut = -1;
-    const windowText = rest.slice(0, maxLen);
-    for(const mark of ['\n', '.', '؟', '?', '!', '؛', '،', ',', ' ']){
-      const i = windowText.lastIndexOf(mark);
-      if(i > maxLen * 0.5){ cut = i + 1; break; }
-    }
-    if(cut < 0) cut = maxLen;
-    parts.push(rest.slice(0, cut).trim());
-    rest = rest.slice(cut).trim();
-  }
-  if(rest) parts.push(rest);
-  return parts.filter(Boolean);
-}
-const ttsSleep = (ms) => new Promise(r => setTimeout(r, ms));
-async function fetchAzureChunkForCache(text, apiKey, region, voiceName){
-  const localeMatch = voiceName.match(/^([a-zA-Z]{2}-[a-zA-Z]{2})/);
-  const locale = localeMatch ? localeMatch[1] : 'en-US';
-  const ssml = `<speak version='1.0' xml:lang='${locale}'><voice name='${voiceName}'>${escapeForSsml(text)}</voice></speak>`;
-  for(let attempt = 0; attempt < 4; attempt++){
-    const resp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-      method: 'POST',
-      headers: {
-        'Ocp-Apim-Subscription-Key': apiKey,
-        'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-16khz-64kbitrate-mono-mp3'
-      },
-      body: ssml
-    });
-    if(resp.ok) return await resp.blob();
-    if(resp.status === 429 && attempt < 3){ await ttsSleep(8000 * (attempt + 1)); continue; }
-    let detail = '';
-    try{ detail = await resp.text(); }catch(e){}
-    throw new Error(`Azure ${resp.status} (جزء طوله ${text.length} حرف)` + (detail ? ' - ' + detail.slice(0, 80) : ''));
-  }
-}
-async function fetchAzureLongForCache(text, apiKey, region, voiceName, onPart){
-  const parts = splitTextForTts(text, TTS_CACHE_CHUNK_CHARS);
-  const blobs = [];
-  for(let i = 0; i < parts.length; i++){
-    if(onPart) onPart(i + 1, parts.length);
-    blobs.push(await fetchAzureChunkForCache(parts[i], apiKey, region, voiceName));
-    // الباقة المجانية F0 بتسمح بحوالي 20 طلب في الدقيقة
-    if(i < parts.length - 1) await ttsSleep(3200);
-  }
-  return new Blob(blobs, { type: 'audio/mpeg' });
-}
-
+// تقسيم الشرح الطويل بقى جوه سيرفر الصوت (stce-tts-proxy) نفسه.
 function fillTtsCacheProgramSelect(){
   const sel = document.getElementById('ttsCacheProgramSelect');
   if(!sel) return;
@@ -7187,10 +7470,12 @@ async function generateTtsCacheForProgram(){
   if(!state.isSuperAdmin){ say('الأداة دي متاحة لحساب STCE (Super Admin) بس.'); return; }
 
   const tts = state.ttsSettings || {};
-  const provider = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
-  if(provider === 'azure' && !(tts.azureKey && tts.azureRegion)){ say('محتاجة مفتاح Azure والـ Region محفوظين الأول.'); return; }
-  if(provider === 'elevenlabs' && !tts.apiKey){ say('محتاجة مفتاح ElevenLabs محفوظ الأول.'); return; }
-  if(provider !== 'azure' && provider !== 'elevenlabs'){ say('اختاري Azure أو ElevenLabs كمصدر صوت واحفظي الأول. صوت المتصفح مش بيتخزن.'); return; }
+  const srcSel = document.getElementById('ttsCacheSource');
+  const useGemini = !!srcSel && srcSel.value === 'gemini';
+  const g = geminiTtsConfig();
+  const provider = useGemini ? 'gemini' : (tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser')));
+  if(useGemini && !g.voice){ say('اختاري صوت Gemini ودوسي «حفظ إعدادات Gemini» الأول.'); return; }
+  if(provider !== 'azure' && provider !== 'elevenlabs' && provider !== 'gemini'){ say('اختاري Azure أو ElevenLabs كمصدر صوت واحفظي الأول. صوت المتصفح مش بيتخزن.'); return; }
 
   const pid = document.getElementById('ttsCacheProgramSelect').value;
   const p = (state.programs || []).find(x => x.id === pid);
@@ -7204,9 +7489,9 @@ async function generateTtsCacheForProgram(){
     catch(e){ console.error(e); say('ماقدرتش أحفظ كلمة السر في الإعدادات المحمية. اتأكدي إنك داخلة بحساب STCE.'); return; }
   }
 
-  const voice = ttsCacheVoiceFor(tts, provider, state.lang);
+  const voice = useGemini ? '' : ttsCacheVoiceFor(tts, provider, state.lang);
   const modules = p.modules || [];
-  let saved = 0, skipped = 0, failed = 0, bytes = 0, lastErr = '';
+  let saved = 0, skipped = 0, failed = 0, bytes = 0, lastErr = '', lastPrevErr = '', geminiRequests = 0, quotaHit = false;
   if(btn) btn.disabled = true;
   try{
     for(let i = 0; i < modules.length; i++){
@@ -7218,15 +7503,24 @@ async function generateTtsCacheForProgram(){
         // لو سكريبت الشرح فشل يتولّد، بنسيب الوحدة دي من غير تخزين (المتدرب
         // ساعتها هيتولّد له سكريبت جديد بنص مختلف، فالتخزين مش هيفيد).
         const scriptText = await getLectureScript(m);
-        const text = stripFormattingForSpeech(scriptText);
+        const text = prepareSpeechText(scriptText);
         if(!text || !text.trim()){ skipped++; continue; }
         stage = 'key';
-        const key = await ttsCacheKey(text, provider, voice, state.lang);
+        const key = useGemini ? await geminiCacheKey(text, g) : await ttsCacheKey(text, provider, voice, state.lang);
         if(await ttsCacheExists(key)){ skipped++; continue; }
         stage = 'voice';
+        if(useGemini){
+          const gen = await generateGeminiAudio(text, g, (k, n) => say(`(${i + 1}/${modules.length}) ${mTitle}… Gemini جزء ${k} من ${n}`));
+          geminiRequests += gen.requests;
+          stage = 'save';
+          await ttsCachePut(key, gen.blob, `${p.title} / ${mTitle}`, token);
+          await partDel(gen.partKeys);
+          saved++;
+          bytes += gen.blob.size || 0;
+          continue;
+        }
         const blob = (provider === 'azure')
-          ? await fetchAzureLongForCache(text, tts.azureKey, tts.azureRegion, voice,
-              (k, n) => say(`(${i + 1}/${modules.length}) ${mTitle}… جزء ${k} من ${n}`))
+          ? await fetchTtsLongViaProxy('azure', text, voice, (k, n) => say(`(${i + 1}/${modules.length}) ${mTitle}… جزء ${k} من ${n}`))
           : await fetchElevenLabsAudio(text, tts.apiKey, voice);
         stage = 'save';
         await ttsCachePut(key, blob, `${p.title} / ${mTitle}`, token);
@@ -7236,7 +7530,8 @@ async function generateTtsCacheForProgram(){
         console.error('tts cache generate failed for module', m && m.id, stage, e);
         failed++;
         const stageName = { script: 'سكريبت الشرح', key: 'حساب البصمة', voice: 'توليد الصوت', save: 'الحفظ في المخزن' }[stage] || stage;
-        lastErr = `آخر خطأ عند «${stageName}»: ${String((e && e.message) || e).slice(0, 160)}`;
+        if(lastErr) lastPrevErr = lastErr;
+        lastErr = `الخطأ عند «${stageName}»: ${String((e && e.message) || e).slice(0, 160)}`;
         if(e && e.status === 401){
           state.ttsCacheToken = null;
           say('كلمة سر المخزن غلط. اتوقف التوليد. جربي تاني والصقي كلمة السر الصح.');
@@ -7244,14 +7539,76 @@ async function generateTtsCacheForProgram(){
           return;
         }
         if(e && e.status === 403){ say('المخزن رفض الطلب لأن رابط المنصة مش مطابق لـ ALLOWED_ORIGIN.'); return; }
+        if(useGemini && e && e.status === 429){ quotaHit = true; break; }
+        // مع Gemini: أي خطأ بعد مرحلة السكريبت بيوقف التوليد فورًا، عشان مانضيّعش
+        // باقي طلبات اليوم (10 بس) على نفس الخطأ في كل وحدة.
+        if(useGemini && stage !== 'script'){
+          const mb0 = Math.round(bytes / 1048576 * 10) / 10;
+          say(`اتوقف عند الوحدة ${i + 1} (${mTitle}). اتخزن ${saved} وحدة (${mb0} ميجا). ${lastErr}`);
+          return;
+        }
       }
     }
     const mb = Math.round(bytes / 1048576 * 10) / 10;
+    if(quotaHit){
+      say(`وقفت: خلص حد Gemini المجاني النهارده (10 طلبات في اليوم). اتخزن ${saved} وحدة (${mb} ميجا)، والأجزاء اللي اتولّدت من الوحدة الحالية محفوظة على جهازك` + (failed > 1 ? `، و${failed - 1} وحدة فشلت قبلها` : '') + `. دوسي توليد تاني بكرة على نفس البرنامج وهيكمّل من مكان ما وقف.` + (failed > 1 && lastPrevErr ? ' — ' + lastPrevErr : ''));
+      return;
+    }
     say(`خلصت: ${saved} وحدة اتخزنت (${mb} ميجا)، ${skipped} كانت محفوظة قبل كده أو فاضية، ${failed} فشلت.` + (lastErr ? ' — ' + lastErr : ''));
   }finally{
     if(btn) btn.disabled = false;
   }
 }
+
+// بيدوّر على اسم الصوت في مكتبة أصوات Gemini (عن طريق سيرفر الصوت، عشان المفتاح
+// مايظهرش) ويرجّع الـ id اللي بيتبعت في طلب التوليد.
+async function resolveGeminiVoice(typed){
+  const r = await fetch(TTS_PROXY_URL + '/gemini-voices?search=' + encodeURIComponent(typed));
+  if(!r.ok) return null;
+  const list = ((await r.json()).voices || []).filter(v => v && v.id);
+  const low = typed.toLowerCase();
+  const exact = list.find(v => String(v.name).toLowerCase() === low || String(v.id).toLowerCase() === low);
+  if(exact) return exact;
+  if(list.length) return { error: 'مالقيتش صوت بالاسم ده بالظبط. أقرب أسماء: ' + list.slice(0, 6).map(v => v.name || v.id).join('، ') };
+  return null;
+}
+(function initGeminiTtsUi(){
+  const openBtn = document.getElementById('voiceSettingsBtn');
+  const src = document.getElementById('ttsCacheSource');
+  const box = document.getElementById('geminiTtsBox');
+  const vSel = document.getElementById('geminiTtsVoice');
+  const st = document.getElementById('geminiTtsStyle');
+  const saveBtn = document.getElementById('geminiTtsSaveBtn');
+  const status = document.getElementById('geminiTtsStatus');
+  const syncBox = () => { if(box && src) box.style.display = src.value === 'gemini' ? 'block' : 'none'; };
+  if(src) src.addEventListener('change', syncBox);
+  if(openBtn) openBtn.addEventListener('click', () => {
+    const g = geminiTtsConfig();
+    if(vSel) vSel.value = (state.geminiTts && state.geminiTts.voiceName) || g.voice || '';
+    if(st) st.value = g.style;
+    syncBox();
+  });
+  if(saveBtn) saveBtn.addEventListener('click', async () => {
+    const typed = vSel ? vSel.value.trim() : '';
+    if(!typed){ if(status) status.textContent = 'اكتبي اسم الصوت الأول.'; return; }
+    saveBtn.disabled = true;
+    if(status) status.textContent = 'بدوّر على الصوت…';
+    let resolved = null;
+    try{ resolved = await resolveGeminiVoice(typed); }
+    catch(e){ console.warn('voice lookup failed', e); }
+    if(resolved && resolved.error){ if(status) status.textContent = resolved.error; saveBtn.disabled = false; return; }
+    const voiceId = (resolved && resolved.id) || typed;
+    const val = { voice: voiceId, voiceName: (resolved && resolved.name) || typed, style: (st && st.value.trim()) ? st.value.trim().slice(0, 300) : DEFAULT_GEMINI_STYLE };
+    try{
+      await setDoc(doc(trainerDb, 'platform', 'config'), { geminiTts: val }, { merge: true });
+      state.geminiTts = val;
+      if(status) status.textContent = `✓ اتحفظ: صوت ${val.voiceName}` + (val.voice !== val.voiceName ? ` (${val.voice})` : '') + '.';
+    }catch(e){
+      console.error('save geminiTts failed', e);
+      if(status) status.textContent = 'ماقدرتش أحفظ. اتأكدي إنك داخلة بحساب STCE.';
+    }finally{ saveBtn.disabled = false; }
+  });
+})();
 
 (function initTtsCacheAdminUi(){
   const openBtn = document.getElementById('voiceSettingsBtn');
@@ -7760,6 +8117,7 @@ document.getElementById('voiceSettingsBtn').addEventListener('click', () => {
 
   // مصدر الصوت المختار حاليًا (لو إعدادات قديمة من قبل إضافة Azure، بنستنتجه
   // من المفاتيح المحفوظة بنفس منطق speakSmart)
+  document.getElementById('ttsSpeechRate').value = String(ttsPlaybackRate());
   document.getElementById('ttsProvider').value = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
   syncTtsProviderFields();
 
@@ -7790,10 +8148,11 @@ document.getElementById('saveTtsBtn').addEventListener('click', async () => {
   const azureVoiceEn = azurePresetEn === 'custom' ? document.getElementById('azureVoiceNameEn').value.trim() : azurePresetEn;
   state.ttsSettings = {
     provider: document.getElementById('ttsProvider').value,
-    apiKey: document.getElementById('ttsApiKey').value.trim(),
+    apiKey: '',
     voiceId: voiceId,
-    azureKey: document.getElementById('azureApiKey').value.trim(),
-    azureRegion: document.getElementById('azureRegion').value.trim(),
+    rate: Number(document.getElementById('ttsSpeechRate').value) || 0.9,
+    azureKey: '',
+    azureRegion: '',
     azureVoice: azureVoice,
     azureVoiceEn: azureVoiceEn
   };
