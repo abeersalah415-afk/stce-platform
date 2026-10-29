@@ -499,12 +499,27 @@
       <option value="azure" data-i18n="tts_opt_azure">Microsoft Azure — صوت مصري طبيعي (Salma / Shakir)</option>
       <option value="elevenlabs" data-i18n="tts_opt_eleven">ElevenLabs</option>
     </select>
+    <label class="small" style="margin-top:10px;">سرعة كلام المحاضر (بتتطبق فورًا للتجربة، وبتتحفظ لما تدوسي حفظ)</label>
+    <select id="ttsSpeechRate">
+      <option value="0.8">أبطأ (0.8)</option>
+      <option value="0.85">بطيء شوية (0.85)</option>
+      <option value="0.9">متوسط (0.9) — الافتراضي</option>
+      <option value="0.95">أسرع شوية (0.95)</option>
+      <option value="1">سرعة Azure الأصلية (1)</option>
+    </select>
+    <label class="small" style="margin-top:12px;">📖 قاموس النطق — كل سطر: الكلمة = طريقة نطقها (ممكن بالتشكيل)</label>
+    <textarea id="ttsLexiconInput" rows="5" dir="rtl" style="width:100%;font-family:inherit;" placeholder="عشان = عَشان&#10;CNC = سي إن سي"></textarea>
+    <button class="btn btn-ghost" id="ttsLexiconSaveBtn" type="button" style="margin-top:6px;">حفظ القاموس</button>
+    <div class="hint" id="ttsLexiconStatus" style="margin-top:4px;">زرار «حفظ القاموس» بيحفظ القاموس لوحده ومش بيلمس إعدادات الصوت ولا المفاتيح.</div>
 
     <div id="azureFields" style="display:none;margin-top:10px;">
+      <div class="hint" style="margin:0 0 8px;">🔒 مفتاح Azure والـ Region محفوظين بأمان في سيرفر الصوت (stce-tts-proxy)، ومش محتاجين يتكتبوا هنا.</div>
+      <div style="display:none;">
       <label class="small" data-i18n="azure_apikey_label">Azure Speech API Key</label>
       <input type="password" id="azureApiKey" placeholder="...">
       <label class="small" data-i18n="azure_region_label">Azure Region (مثال: eastus, westeurope — زي ما هو مكتوب في حسابك)</label>
       <input type="text" id="azureRegion" placeholder="eastus">
+      </div>
       <label class="small" data-i18n="azure_voice_label">اختاري صوت</label>
       <select id="azureVoicePreset">
         <option value="ar-EG-SalmaNeural" data-i18n="azure_voice_salma">Salma — حريمي مصري</option>
@@ -525,8 +540,11 @@
     </div>
 
     <div id="elevenFields" style="display:none;margin-top:10px;">
+      <div class="hint" style="margin:0 0 8px;">🔒 مفتاح ElevenLabs محفوظ بأمان في سيرفر الصوت (stce-tts-proxy).</div>
+      <div style="display:none;">
       <label class="small" data-i18n="eleven_apikey_label">ElevenLabs API Key</label>
       <input type="password" id="ttsApiKey" placeholder="sk_...">
+      </div>
       <label class="small" data-i18n="eleven_voice_label">اختاري صوت</label>
       <select id="ttsVoicePreset">
         <option value="pNInz6obpgDQGcFmaJgB" data-i18n="el_v_adam">Adam — رجالي</option>
@@ -540,7 +558,28 @@
       <input type="text" id="ttsVoiceId" placeholder="Voice ID" style="display:none;margin-top:8px;">
     </div>
 
-    <div class="hint" style="color:#9a3b41;margin-top:10px;" data-i18n="tts_security_hint">⚠️ تنبيه أمان: أي مفتاح تحطيه هنا بيتخزن ويشتغل من متصفح أي حد بيفتح المنصة (المحاضر أو المتدرب)، يعني ممكن يظهر لأي حد يفتح أدوات المطور في المتصفح. متحطيش مفتاح فيه رصيد كبير، وراجعي حدود الاستخدام في حسابك بشكل دوري.</div>
+    <div id="ttsCacheSection" style="display:none;margin-top:14px;padding:12px;border:1px dashed #c9d6e8;border-radius:10px;">
+      <label class="small" style="font-weight:700;">💾 تخزين صوت البرامج (توفير رصيد الصوت)</label>
+      <div class="hint">بيولّد صوت شرح كل وحدات البرنامج مرة واحدة ويحفظه. بعدها المتدربين بيسمعوا من الملف المحفوظ ومش بيتخصم رصيد. احفظي إعدادات الصوت الأول قبل التوليد.</div>
+      <label class="small" style="margin-top:8px;">مصدر صوت التخزين</label>
+      <select id="ttsCacheSource">
+        <option value="gemini">Gemini TTS — صوت طبيعي (حوالي 10 طلبات في اليوم مجانًا)</option>
+        <option value="azure">Azure (مصدر الصوت الحالي)</option>
+      </select>
+      <div id="geminiTtsBox" style="margin-top:8px;">
+        <label class="small">صوت Gemini</label>
+        <input type="text" id="geminiTtsVoice" dir="ltr" placeholder="Kira" style="width:100%;">
+        <div class="hint" style="margin-top:2px;">اكتبي اسم الصوت زي ما هو في AI Studio (مثلاً Kira). لما تدوسي حفظ، المنصة هتدوّر عليه في مكتبة أصوات Gemini.</div>
+        <label class="small" style="margin-top:6px;">أسلوب الكلام</label>
+        <textarea id="geminiTtsStyle" rows="2" dir="rtl" style="width:100%;font-family:inherit;"></textarea>
+        <button class="btn btn-ghost" id="geminiTtsSaveBtn" type="button" style="margin-top:6px;">حفظ إعدادات Gemini</button>
+        <div class="hint" id="geminiTtsStatus">الزرار ده بيحفظ إعدادات Gemini لوحدها ومش بيلمس المفاتيح.</div>
+      </div>
+      <select id="ttsCacheProgramSelect" style="margin-top:8px;"></select>
+      <button class="btn btn-ghost" id="ttsCacheGenerateBtn" type="button" style="margin-top:8px;">توليد وتخزين صوت البرنامج</button>
+      <div class="hint" id="ttsCacheStatus" style="margin-top:6px;"></div>
+    </div>
+    <div class="hint" style="color:#9a3b41;margin-top:10px;" data-i18n="tts_security_hint">🔒 مفاتيح الصوت مش بتتخزن في المنصة ولا في Firebase. هي محفوظة كـ Secret في سيرفر الصوت stce-tts-proxy على Cloudflare، والمنصة بتطلب الصوت منه بس.</div>
     <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
     <label class="small" data-i18n="aiWorkerUrl_label">رابط سيرفر الذكاء الاصطناعي (لتشغيل "المدرب الذكي" اللي بيرد على أسئلة المتدربين)</label>
     <input type="text" id="aiWorkerUrl" placeholder="https://...workers.dev">
@@ -827,7 +866,7 @@ const translations = {
     el_v_rachel: "Rachel — حريمي",
     el_v_bella: "Bella — حريمي",
     el_v_custom: "مخصص — حطي Voice ID بنفسك",
-    tts_security_hint: "⚠️ تنبيه أمان: أي مفتاح تحطيه هنا بيتخزن ويشتغل من متصفح أي حد بيفتح المنصة (المحاضر أو المتدرب)، يعني ممكن يظهر لأي حد يفتح أدوات المطور في المتصفح. متحطيش مفتاح فيه رصيد كبير، وراجعي حدود الاستخدام في حسابك بشكل دوري.",
+    tts_security_hint: "🔒 مفاتيح الصوت مش بتتخزن في المنصة ولا في Firebase. هي محفوظة كـ Secret في سيرفر الصوت stce-tts-proxy على Cloudflare، والمنصة بتطلب الصوت منه بس.",
     aiWorkerUrl_label: "رابط سيرفر الذكاء الاصطناعي (لتشغيل \"المدرب الذكي\" اللي بيرد على أسئلة المتدربين)",
     aiWorkerUrl_hint: "ده رابط سيرفر وسيط صغير ومجاني (Cloudflare Worker) بيحمل مفتاح Gemini بشكل سري تمامًا - مش هيظهر في كود المنصة العام خالص، على عكس مفاتيح الصوت.",
     btn_save: "حفظ",
@@ -1219,6 +1258,26 @@ const translations = {
     confirm_resume_translation: "فيه نسخة إنجليزية من البرنامج ده بدأت الترجمة قبل كده ولسه متكملتش ({done} من {total} وحدة خلصت). هيتم استكمال الترجمة من حيث توقفت من غير إعادة ترجمة الوحدات اللي خلصت صح. تحبي تستمري؟",
     btn_remove_option: "حذف هذا الاختيار",
     nav_groupid_dryrun: "🔍 معاينة Group ID",
+    nav_lab3d: "🧪 معمل العرض ثلاثي الأبعاد (تجريبي)",
+    lab3d_title: "معمل العرض ثلاثي الأبعاد — مشهد تجريبي",
+    lab3d_disclaimer: "ده مشهد تجريبي منفصل تمامًا، لسه مش مربوط بأي كورس أو محتوى حقيقي، ومش ظاهر للمتدربين خالص — السوبر أدمن بس اللي يشوفه هنا كتجربة.",
+    lab3d_loading: "جاري تحميل المشهد التجريبي...",
+    lab3d_fail: "تعذّر تحميل المشهد ثلاثي الأبعاد. جرّبي تاني أو أبلغي الدعم الفني.",
+    nav_livevoice: "🎙️ الصوت الحي (تجريبي)",
+    livevoice_title: "الصوت الحي — محادثة تجريبية",
+    livevoice_disclaimer: "ده اختبار تجريبي منفصل تمامًا لميزة المحادثة الصوتية الحية، مش مربوط بأي شاشة متدرب أو كورس حقيقي، وغير ظاهر إلا للسوبر أدمن. بيستخدم الميكروفون بتاعك فقط لما تدوسي ابدأ، ومحتاج اتصال إنترنت جيد.",
+    livevoice_start_btn: "🎙️ ابدأ المحادثة الصوتية",
+    livevoice_stop_btn: "⏹️ إنهاء المحادثة",
+    livevoice_status_idle: "جاهز. دوسي ابدأ المحادثة عشان تتكلمي مع المساعد الذكي صوتيًا.",
+    livevoice_status_connecting: "⏳ جاري الاتصال بخدمة الصوت الحي...",
+    livevoice_status_mic_permission: "⏳ محتاجين إذن استخدام الميكروفون من المتصفح...",
+    livevoice_status_listening: "🎙️ بيسمعك دلوقتي... اتكلمي بشكل طبيعي.",
+    livevoice_status_speaking: "🔊 المساعد بيرد...",
+    livevoice_status_stopped: "⏹️ المحادثة اتقفلت.",
+    livevoice_err_mic_denied: "❌ تم رفض إذن الميكروفون. لازم تسمحي باستخدام الميكروفون من إعدادات المتصفح عشان تستخدمي الميزة دي.",
+    livevoice_err_connection: "❌ فشل الاتصال بخدمة الصوت الحي. جربي تاني، ولو المشكلة استمرت أبلغي الدعم الفني.",
+    livevoice_err_not_supported: "❌ المتصفح ده مش بيدعم تسجيل الصوت. جربي متصفح تاني (Chrome أو Edge الحديث).",
+    btn_view_3d_model: "🧊 عرض الموديل 3D",
     groupid_dryrun_title: "معاينة Group ID (قراءة فقط — بدون أي تعديل)",
     groupid_dryrun_disclaimer: "هذه محاكاة قراءة فقط. لم يتم ولن يتم كتابة أي شيء في Firestore، ولم يتغيّر أي id لأي برنامج أو وحدة أو سؤال أو طلب.",
     groupid_stat_total: "عدد البرامج التي تم تحليلها: {n}",
@@ -1388,7 +1447,7 @@ const translations = {
     el_v_rachel: "Rachel — female",
     el_v_bella: "Bella — female",
     el_v_custom: "Custom — enter the Voice ID yourself",
-    tts_security_hint: "⚠️ Security notice: any key you enter here is stored and runs from the browser of anyone who opens the platform (trainer or trainee), so it may be visible to anyone who opens the browser developer tools. Do not use a key with a large balance, and review your account usage limits regularly.",
+    tts_security_hint: "🔒 Voice keys are not stored in the platform or in Firebase. They are kept as Secrets in the stce-tts-proxy voice server on Cloudflare, and the platform only requests audio from it.",
     aiWorkerUrl_label: "AI server URL (powers the \"AI Trainer\" that answers trainee questions)",
     aiWorkerUrl_hint: "This is a small, free relay server (Cloudflare Worker) that holds the Gemini key completely secretly — it never appears in the platform's public code, unlike the voice keys.",
     btn_save: "Save",
@@ -1780,6 +1839,26 @@ const translations = {
     confirm_resume_translation: "An English copy of this program already started translating before and did not finish ({done} of {total} unit(s) done). Translation will resume from where it stopped, without re-translating the units that already succeeded. Continue?",
     btn_remove_option: "Remove this option",
     nav_groupid_dryrun: "🔍 Group ID Preview",
+    nav_lab3d: "🧪 3D Visual Lab (Pilot)",
+    lab3d_title: "3D Visual Lab — Pilot Scene",
+    lab3d_disclaimer: "This is a fully separate pilot scene, not yet linked to any course or real content, and not visible to trainees at all — only the Super Admin can see it here as a trial.",
+    lab3d_loading: "Loading pilot scene...",
+    lab3d_fail: "Couldn't load the 3D scene. Try again or contact support.",
+    nav_livevoice: "🎙️ Live Voice (Pilot)",
+    livevoice_title: "Live Voice — Pilot Conversation",
+    livevoice_disclaimer: "This is a fully separate pilot test of the live voice conversation feature, not linked to any trainee screen or real course, and only visible to the Super Admin. It uses your microphone only when you press Start, and needs a good internet connection.",
+    livevoice_start_btn: "🎙️ Start voice conversation",
+    livevoice_stop_btn: "⏹️ End conversation",
+    livevoice_status_idle: "Ready. Press Start to speak with the AI assistant by voice.",
+    livevoice_status_connecting: "⏳ Connecting to the live voice service...",
+    livevoice_status_mic_permission: "⏳ Waiting for microphone permission from the browser...",
+    livevoice_status_listening: "🎙️ Listening now... speak naturally.",
+    livevoice_status_speaking: "🔊 Assistant is responding...",
+    livevoice_status_stopped: "⏹️ Conversation ended.",
+    livevoice_err_mic_denied: "❌ Microphone permission was denied. You need to allow microphone access from your browser settings to use this feature.",
+    livevoice_err_connection: "❌ Failed to connect to the live voice service. Try again, and if the problem persists, contact support.",
+    livevoice_err_not_supported: "❌ This browser doesn't support audio recording. Try another browser (Chrome or a recent Edge).",
+    btn_view_3d_model: "🧊 View 3D Model",
     groupid_dryrun_title: "Group ID Dry Run (Read-only — no changes made)",
     groupid_dryrun_disclaimer: "This is a read-only simulation. Nothing has been or will be written to Firestore, and no program, module, quiz, or request ID has changed.",
     groupid_stat_total: "Programs analyzed: {n}",
@@ -2699,6 +2778,8 @@ async function loadState(){
     if(cfgSnap.exists()){
       const cfg = cfgSnap.data();
       state.ttsSettings = cfg.ttsSettings || DEFAULT_TTS_SETTINGS;
+      state.ttsLexicon = Array.isArray(cfg.ttsLexicon) ? cfg.ttsLexicon : null;
+      state.geminiTts = (cfg.geminiTts && typeof cfg.geminiTts === 'object') ? cfg.geminiTts : null;
       state.aiSettings = cfg.aiSettings || DEFAULT_AI_SETTINGS;
       state.bankAccount = cfg.bankAccount || DEFAULT_BANK_ACCOUNT;
     } else {
@@ -3455,9 +3536,22 @@ function renderTraineeProgramMain(main){
         ${m.quiz.length ? `<button class="btn btn-ghost" id="startQuizBtn">${i18n('btn_start_quiz')}</button>` : ''}
         <button class="btn btn-ghost" id="speakBtn">${i18n('btn_listen_explain')}</button>
         <button class="btn btn-ghost" id="downloadPdfBtn">${i18n('btn_download_unit_pdf')}</button>
+        ${(typeof window.__stceModule3DGetTemplateKey === 'function' && window.__stceModule3DGetTemplateKey(localized(m.title, state.lang))) ? `<button class="btn btn-ghost" id="view3DBtn">${i18n('btn_view_3d_model')}</button>` : ''}
       </div>
     </div>`;
   stopAllSpeech();
+  /* --- إضافة تجريبية فقط (Pilot, additive-only): زرار موديل 3D لو في قالب مطابق لعنوان الوحدة.
+     لو السكريبت المسؤول عن الموديلات ما اتحملش لأي سبب، الزرار أصلاً ما بيظهرش فوق،
+     وده مش بيأثر خالص على باقي شغل الوحدة. --- */
+  try{
+    const view3DBtn = document.getElementById('view3DBtn');
+    if(view3DBtn && typeof window.__stceModule3DOpen === 'function'){
+      view3DBtn.addEventListener('click', () => {
+        const tplKey = window.__stceModule3DGetTemplateKey(localized(m.title, state.lang));
+        if(tplKey) window.__stceModule3DOpen(tplKey, localized(m.title, state.lang));
+      });
+    }
+  }catch(e){ console.error('module3d_button_wire_failed', e); }
   main.querySelectorAll('.quick-action-btn').forEach(btn => btn.addEventListener('click', () => {
     document.getElementById('chatPanel').classList.remove('hidden');
     sendChatMessage(btn.dataset.prompt);
@@ -3572,6 +3666,12 @@ function renderTrainerSidebar(sidebar){
     ${state.isSuperAdmin ? `<div class="module-item ${state.trainerView==='groupIdDryRun'?'active':''}" id="groupIdDryRunNavItem">
       <div class="title">${i18n('nav_groupid_dryrun')}</div>
     </div>` : ''}
+    ${state.isSuperAdmin ? `<div class="module-item ${state.trainerView==='lab3d'?'active':''}" id="lab3dNavItem">
+      <div class="title">${i18n('nav_lab3d')}</div>
+    </div>` : ''}
+    ${state.isSuperAdmin ? `<div class="module-item ${state.trainerView==='livevoice'?'active':''}" id="livevoiceNavItem">
+      <div class="title">${i18n('nav_livevoice')}</div>
+    </div>` : ''}
     <h3 style="margin-top:18px;">${i18n('nav_programs_header')}</h3><div class="sub">${i18n('programs_count', {n: visibleTrainerPrograms.length})}</div>`;
   visibleTrainerPrograms.forEach(p => {
     const pendingCount = state.requests.filter(r => r.programId === p.id && r.status === 'pending').length;
@@ -3605,6 +3705,16 @@ function renderTrainerSidebar(sidebar){
   const groupIdDryRunNavItem = document.getElementById('groupIdDryRunNavItem');
   if(groupIdDryRunNavItem) groupIdDryRunNavItem.addEventListener('click', () => {
     state.trainerView = 'groupIdDryRun';
+    renderAll();
+  });
+  const lab3dNavItem = document.getElementById('lab3dNavItem');
+  if(lab3dNavItem) lab3dNavItem.addEventListener('click', () => {
+    state.trainerView = 'lab3d';
+    renderAll();
+  });
+  const livevoiceNavItem = document.getElementById('livevoiceNavItem');
+  if(livevoiceNavItem) livevoiceNavItem.addEventListener('click', () => {
+    state.trainerView = 'livevoice';
     renderAll();
   });
   sidebar.querySelectorAll('.module-item[data-pid]').forEach(n => n.addEventListener('click', () => {
@@ -4554,7 +4664,137 @@ function renderGroupIdDryRunScreen(main){
   });
 }
 
+/* ============== معمل العرض ثلاثي الأبعاد (تجريبي - ROUND 7 PILOT) ==============
+ * ميزة جديدة بالكامل، مستقلة تمامًا عن باقي المنصة: مش بتنادي ولا بتستخدم أي
+ * دالة أو إعداد خاص بالصوت (ttsSettings) أو أي ميزة تانية شغالة. ظاهرة للسوبر
+ * أدمن بس (تماشيًا مع نفس منطق state.isSuperAdmin المستخدم في باقي الصفحة)،
+ * ومش مربوطة بأي كورس حقيقي أو بشاشة المتدرب خالص - لسه مشهد تجريبي بس.
+ * الكود الفعلي بتاع Three.js موجود في سكريبت منفصل تمامًا في آخر الملف
+ * (window.__stce3DLabMount / window.__stce3DLabUnmount)، عشان نضمن إن تحميل
+ * المكتبة الإضافية دي ما يأثرش على سرعة تحميل باقي المنصة لحد ما حد فعليًا
+ * يفتح الصفحة دي.
+ */
+function renderLab3D(main){
+  main.innerHTML = `
+    <div class="card" style="padding:18px;">
+      <h2 style="margin-top:0;">${i18n('lab3d_title')}</h2>
+      <div class="hint" style="margin-bottom:14px;">${i18n('lab3d_disclaimer')}</div>
+      <div id="lab3dStatus" class="hint">${i18n('lab3d_loading')}</div>
+      <div id="lab3dContainer" style="width:100%;max-width:720px;height:420px;border-radius:12px;overflow:hidden;background:var(--board-dark);margin-top:10px;"></div>
+    </div>`;
+  const statusEl = document.getElementById('lab3dStatus');
+  const containerEl = document.getElementById('lab3dContainer');
+  const tryMount = () => {
+    if(typeof window.__stce3DLabMount === 'function'){
+      try{
+        window.__stce3DLabMount(containerEl);
+        if(statusEl) statusEl.style.display = 'none';
+      }catch(e){
+        console.error('3D lab mount failed', e);
+        if(statusEl) statusEl.textContent = i18n('lab3d_fail');
+      }
+      return true;
+    }
+    return false;
+  };
+  // السكريبت بتاع Three.js لسه ممكن يكون بيتحمّل (أول مرة بس)، فبنحاول كذا
+  // مرة بفاصل بسيط بدل ما نفترض إنه جاهز فورًا - من غير ما نأثر على أي حاجة
+  // تانية في الصفحة.
+  if(!tryMount()){
+    let attempts = 0;
+    const retry = setInterval(() => {
+      attempts++;
+      if(tryMount() || attempts > 25){
+        clearInterval(retry);
+        if(attempts > 25 && statusEl) statusEl.textContent = i18n('lab3d_fail');
+      }
+    }, 200);
+  }
+}
+
+/* ============== الصوت الحي (تجريبي - ROUND 8 PILOT) ==============
+ * ميزة جديدة بالكامل ومستقلة تمامًا عن باقي المنصة وعن الصوت الحالي
+ * (speakSmart/Azure/ElevenLabs/صوت المتصفح) - مفيش أي تعديل على أي كود صوت
+ * موجود خالص. بتتواصل مع Worker منفصل تمامًا (stce-gemini-live-proxy) عن
+ * طريق WebSocket، وده مش نفس الـ Worker الأساسي (stce-gemini-proxy) المستخدم
+ * في باقي المنصة. ظاهرة للسوبر أدمن بس، ومش مربوطة بشاشة المتدرب أو أي كورس
+ * حقيقي - لسه تجربة أولى (pilot) محتاجة اختبار حقيقي.
+ * الكود الفعلي (الميكروفون + WebSocket + تشغيل الصوت) موجود في سكريبت منفصل
+ * تمامًا في آخر الملف (window.__stceLiveVoiceMount / Unmount)، بنفس فلسفة
+ * معمل الـ3D بالظبط - تحميل/تشغيل إضافي صفر لحد ما حد فعليًا يفتح الصفحة دي.
+ */
+function renderLiveVoice(main){
+  main.innerHTML = `
+    <div class="card" style="padding:18px;">
+      <h2 style="margin-top:0;">${i18n('livevoice_title')}</h2>
+      <div class="hint" style="margin-bottom:14px;">${i18n('livevoice_disclaimer')}</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <button class="add-module-btn" id="livevoiceStartBtn" style="margin-top:0;">${i18n('livevoice_start_btn')}</button>
+        <button class="add-module-btn" id="livevoiceStopBtn" style="margin-top:0; display:none;">${i18n('livevoice_stop_btn')}</button>
+      </div>
+      <div id="livevoiceStatus" class="hint" style="font-weight:600;">${i18n('livevoice_status_idle')}</div>
+      <div id="livevoiceTranscript" style="margin-top:14px; max-width:720px; max-height:260px; overflow-y:auto; display:none; background:var(--board-dark); border-radius:12px; padding:12px; font-size:14px; line-height:1.7;"></div>
+    </div>`;
+  const startBtn = document.getElementById('livevoiceStartBtn');
+  const stopBtn = document.getElementById('livevoiceStopBtn');
+  const statusEl = document.getElementById('livevoiceStatus');
+  const transcriptEl = document.getElementById('livevoiceTranscript');
+
+  const setStatus = (key) => { if(statusEl) statusEl.textContent = i18n(key); };
+  const appendTranscript = (text) => {
+    if(!transcriptEl || !text) return;
+    transcriptEl.style.display = '';
+    const line = document.createElement('div');
+    line.textContent = text;
+    transcriptEl.appendChild(line);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  };
+
+  const tryBind = () => {
+    if(typeof window.__stceLiveVoiceMount !== 'function' || typeof window.__stceLiveVoiceUnmount !== 'function') return false;
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
+      stopBtn.style.display = '';
+      window.__stceLiveVoiceMount({
+        onStatus: setStatus,
+        onTranscript: appendTranscript,
+        onStopped: () => {
+          startBtn.style.display = '';
+          stopBtn.style.display = 'none';
+        },
+      });
+    });
+    stopBtn.addEventListener('click', () => {
+      window.__stceLiveVoiceUnmount();
+    });
+    return true;
+  };
+  if(!tryBind()){
+    let attempts = 0;
+    const retry = setInterval(() => {
+      attempts++;
+      if(tryBind() || attempts > 25){
+        clearInterval(retry);
+        if(attempts > 25) setStatus('livevoice_err_connection');
+      }
+    }, 200);
+  }
+}
+
 function renderTrainerMain(main){
+  // تنظيف آمن بس: لو كان فيه مشهد 3D تجريبي شغال وانتقلنا لشاشة تانية غير
+  // معمل الـ3D، بنوقفه عشان ميفضلش شغال في الخلفية ياكل معالج/ذاكرة.
+  // الدالة دي معرّفة بس جوه سكريبت المعمل التجريبي المنفصل (آخر الملف)، ومش
+  // بتعمل حاجة خالص لو المعمل أصلاً ما كانش شغال - فمفيش أي تأثير على أي
+  // شاشة تانية أو أي ميزة موجودة قبل كده.
+  if(state.trainerView !== 'lab3d' && typeof window.__stce3DLabUnmount === 'function'){
+    window.__stce3DLabUnmount();
+  }
+  // نفس المبدأ بالظبط لمعمل الصوت الحي: لو مش في شاشته، نقفل أي اتصال/ميكروفون
+  // شغال عشان محدش يفضل الميكروفون شغال في الخلفية من غير داعي.
+  if(state.trainerView !== 'livevoice' && typeof window.__stceLiveVoiceUnmount === 'function'){
+    window.__stceLiveVoiceUnmount();
+  }
   if(state.trainerView === 'dashboard'){
     renderDashboard(main);
     return;
@@ -4569,6 +4809,14 @@ function renderTrainerMain(main){
   }
   if(state.trainerView === 'groupIdDryRun'){
     renderGroupIdDryRunScreen(main);
+    return;
+  }
+  if(state.trainerView === 'lab3d'){
+    renderLab3D(main);
+    return;
+  }
+  if(state.trainerView === 'livevoice'){
+    renderLiveVoice(main);
     return;
   }
   const p = findProgram(state.trainerSelectedProgramId);
@@ -6671,28 +6919,26 @@ async function speakBrowser(text, opts){
   speakChunk(0);
   return wrapper;
 }
-async function fetchElevenLabsAudio(text, apiKey, voiceId){
-  const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+// === سيرفر الصوت الآمن (stce-tts-proxy) ===
+// المفاتيح بقت جوه Cloudflare Worker، والمنصة بتبعتله النص بس. الدالتين تحت
+// بنفس الأسماء القديمة عشان باقي المنصة ماتتغيرش، بس بقوا بيكلموا السيرفر بدل
+// ما يكلموا Azure/ElevenLabs مباشرة. مُعاملات المفتاح/المنطقة لم تعد مستخدمة.
+const TTS_PROXY_URL = 'https://stce-tts-proxy.abeersalah415.workers.dev';
+async function fetchTtsViaProxy(provider, text, voice){
+  const resp = await fetch(TTS_PROXY_URL + '/tts', {
     method: 'POST',
-    headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: { stability: 0.55, similarity_boost: 0.85 }
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider, text, voice })
   });
   if(!resp.ok){
-    let detail = '';
-    try{
-      const bodyText = await resp.text();
-      try{
-        const parsed = JSON.parse(bodyText);
-        detail = (parsed && parsed.detail && (parsed.detail.message || parsed.detail.status)) || bodyText;
-      }catch(e2){ detail = bodyText; }
-    }catch(e){ /* ignore */ }
-    throw new Error('ElevenLabs request failed: ' + resp.status + (detail ? (' - ' + detail) : ''));
+    let code = '';
+    try{ code = (await resp.json()).error || ''; }catch(e){ /* ignore */ }
+    throw new Error('TTS proxy ' + resp.status + (code ? ' - ' + code : ''));
   }
   return await resp.blob();
+}
+async function fetchElevenLabsAudio(text, apiKey, voiceId){
+  return fetchTtsViaProxy('elevenlabs', text, voiceId);
 }
 // بتهرب الحروف الخاصة (& < > " ') قبل ما ندخل النص جوه SSML لأزيور، عشان لو
 // النص فيه رمز زي & مثلاً الطلب ميفشلش أو يتقطع.
@@ -6705,29 +6951,163 @@ function escapeForSsml(text){
     .replace(/'/g, '&apos;');
 }
 async function fetchAzureSpeechAudio(text, apiKey, region, voiceName){
-  // اسم الصوت دايمًا بالصيغة "لغة-بلد-اسم" (زي ar-EG-SalmaNeural أو en-US-AndrewNeural)،
-  // فبنستخرج الـlocale منه بدل ما نفرضه عربي دايمًا - عشان الصوت الإنجليزي يتقال
-  // باللغة الإنجليزية الصحيحة ومش كـ"عربي" غلط.
-  const localeMatch = voiceName.match(/^([a-zA-Z]{2}-[a-zA-Z]{2})/);
-  const locale = localeMatch ? localeMatch[1] : 'en-US';
-  const femalePattern = /salma|jenny|aria|ava|michelle|zira|susan|sonia|libby/i;
-  const gender = femalePattern.test(voiceName) ? 'Female' : 'Male';
-  const ssml = `<speak version='1.0' xml:lang='${locale}'><voice xml:lang='${locale}' xml:gender='${gender}' name='${voiceName}'>${escapeForSsml(text)}</voice></speak>`;
-  const resp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-    method: 'POST',
-    headers: {
-      'Ocp-Apim-Subscription-Key': apiKey,
-      'Content-Type': 'application/ssml+xml',
-      'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
-    },
-    body: ssml
+  return fetchTtsViaProxy('azure', text, voiceName);
+}
+// === تشغيل تدريجي للصوت (stce-tts-proxy) ===
+// بدل ما المتدرب يستنى الشرح كله يتولّد (ممكن أكتر من دقيقة)، بنقسّمه لأجزاء:
+// أول جزء صغير بيجهز في ثواني ويبدأ يتسمع، والأجزاء اللي بعده بتتجهز في الخلفية.
+// بنستخدم نفس عنصر الصوت لكل الأجزاء (مهم لموبايلات iPhone)، و"onended" اللي
+// باقي المنصة بتحطه بيتنادى مرة واحدة بس في آخر جزء.
+// سرعة الكلام بتتظبط وقت التشغيل (playbackRate مع الحفاظ على طبقة الصوت)، فبتشتغل
+// على الصوت المتخزن والجديد من غير ما نحتاج نعيد التوليد.
+function ttsPlaybackRate(){
+  const r = Number((state.ttsSettings || {}).rate);
+  return (r >= 0.5 && r <= 1.5) ? r : 0.9;
+}
+function applyTtsRate(audio){
+  try{
+    const r = ttsPlaybackRate();
+    audio.preservesPitch = true;
+    audio.defaultPlaybackRate = r;
+    audio.playbackRate = r;
+  }catch(e){ /* ignore */ }
+}
+(function initTtsRateSelect(){
+  const sel = document.getElementById('ttsSpeechRate');
+  if(sel) sel.addEventListener('change', () => {
+    state.ttsSettings = Object.assign({}, state.ttsSettings || {}, { rate: Number(sel.value) || 0.9 });
+    if(currentAudio) applyTtsRate(currentAudio);
   });
-  if(!resp.ok){
-    let detail = '';
-    try{ detail = await resp.text(); }catch(e){ /* ignore */ }
-    throw new Error('Azure Speech request failed: ' + resp.status + (detail ? (' - ' + detail) : ''));
+})();
+// === قاموس النطق ===
+// كلمات بيغلط فيها الصوت بتتبدّل بطريقة نطقها الصح قبل ما النص يروح للصوت (ومن ضمنها
+// بصمة التخزين، فالوحدة اللي فيها كلمة اتصلحت بيتولّد لها صوت جديد صح). الكلمة
+// بتتبدّل كاملة بس، ومعاها حروف البداية (و ف ب ل ك) لو موجودة.
+const DEFAULT_TTS_LEXICON = [
+  { from: 'عشان', to: 'عَشان' },
+  { from: 'علشان', to: 'عَلَشان' }
+];
+function ttsLexicon(){
+  const list = Array.isArray(state.ttsLexicon) ? state.ttsLexicon : DEFAULT_TTS_LEXICON;
+  return list.filter(e => e && typeof e.from === 'string' && typeof e.to === 'string' && e.from.trim() && e.to.trim());
+}
+function escapeRegExp(str){ return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function applyTtsLexicon(text){
+  let out = String(text || '');
+  for(const e of ttsLexicon()){
+    try{
+      const re = new RegExp('(^|[^\\p{L}\\p{M}])([وفبلك]?)' + escapeRegExp(e.from.trim()) + '(?=[^\\p{L}\\p{M}]|$)', 'gu');
+      out = out.replace(re, (m, pre, pfx) => pre + pfx + e.to.trim());
+    }catch(err){ console.warn('lexicon entry skipped', e, err); }
   }
-  return await resp.blob();
+  return out;
+}
+function prepareSpeechText(text){
+  return applyTtsLexicon(stripFormattingForSpeech(text));
+}
+function lexiconToText(list){ return list.map(e => `${e.from} = ${e.to}`).join('\n'); }
+function textToLexicon(txt){
+  return String(txt || '').split('\n').map(line => {
+    const i = line.indexOf('=');
+    if(i < 0) return null;
+    const from = line.slice(0, i).trim(), to = line.slice(i + 1).trim();
+    return (from && to) ? { from, to } : null;
+  }).filter(Boolean).slice(0, 300);
+}
+(function initTtsLexiconUi(){
+  const openBtn = document.getElementById('voiceSettingsBtn');
+  const box = document.getElementById('ttsLexiconInput');
+  const saveBtn = document.getElementById('ttsLexiconSaveBtn');
+  const status = document.getElementById('ttsLexiconStatus');
+  if(openBtn && box) openBtn.addEventListener('click', () => { box.value = lexiconToText(ttsLexicon()); });
+  if(saveBtn && box) saveBtn.addEventListener('click', async () => {
+    const list = textToLexicon(box.value);
+    saveBtn.disabled = true;
+    try{
+      await setDoc(doc(trainerDb, 'platform', 'config'), { ttsLexicon: list }, { merge: true });
+      state.ttsLexicon = list;
+      if(status) status.textContent = `✓ اتحفظ القاموس (${list.length} كلمة).`;
+    }catch(e){
+      console.error('save lexicon failed', e);
+      if(status) status.textContent = 'ماقدرتش أحفظ القاموس. اتأكدي إنك داخلة بحساب STCE.';
+    }finally{ saveBtn.disabled = false; }
+  });
+})();
+const TTS_FIRST_CHUNK_CHARS = 450;
+const TTS_NEXT_CHUNK_CHARS = 1800;
+function splitSpeechText(text, maxLen){
+  const parts = [];
+  let rest = String(text || '').trim();
+  while(rest.length > maxLen){
+    const win = rest.slice(0, maxLen);
+    let cut = -1;
+    for(const mark of ['\n', '.', '؟', '?', '!', '؛', '،', ',', ' ']){
+      const i = win.lastIndexOf(mark);
+      if(i > maxLen * 0.5){ cut = i + 1; break; }
+    }
+    if(cut < 0) cut = maxLen;
+    parts.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if(rest) parts.push(rest);
+  return parts.filter(Boolean);
+}
+// لأداة التوليد: نفس التقسيم، بس بنجمّع الأجزاء في ملف واحد عشان يتخزن. كل طلب
+// للسيرفر صغير (جزء واحد) بدل طلب واحد طويل جدًا ممكن يتقطع.
+async function fetchTtsLongViaProxy(provider, text, voice, onPart){
+  const parts = splitSpeechText(text, TTS_NEXT_CHUNK_CHARS);
+  const blobs = [];
+  for(let i = 0; i < parts.length; i++){
+    if(onPart) onPart(i + 1, parts.length);
+    let blob;
+    try{ blob = await fetchTtsViaProxy(provider, parts[i], voice); }
+    catch(e){ await new Promise(r => setTimeout(r, 8000)); blob = await fetchTtsViaProxy(provider, parts[i], voice); }
+    blobs.push(blob);
+    if(i < parts.length - 1) await new Promise(r => setTimeout(r, 3200));
+  }
+  return new Blob(blobs, { type: 'audio/mpeg' });
+}
+async function playTtsProgressive(provider, text, voice, myGen){
+  const clean = String(text || '').trim();
+  const head = splitSpeechText(clean, TTS_FIRST_CHUNK_CHARS)[0] || clean;
+  const tail = clean.slice(head.length).trim();
+  const parts = [head].concat(tail ? splitSpeechText(tail, TTS_NEXT_CHUNK_CHARS) : []);
+  const fetchPart = (i) => fetchTtsViaProxy(provider, parts[i], voice);
+  const firstBlob = await fetchPart(0);
+  if(myGen !== speechGeneration) return null;
+  const audio = new Audio();
+  audio.volume = 1;
+  let finalHandler = null;
+  Object.defineProperty(audio, 'onended', { configurable: true, get(){ return finalHandler; }, set(fn){ finalHandler = fn; } });
+  const finish = () => { try{ if(typeof finalHandler === 'function') finalHandler(); }catch(e){ console.error(e); } };
+  let idx = 0;
+  let nextPromise = parts.length > 1 ? fetchPart(1).catch(e => e) : null;
+  let currentUrl = URL.createObjectURL(firstBlob);
+  audio.src = currentUrl;
+  applyTtsRate(audio);
+  audio.addEventListener('ended', async () => {
+    if(myGen !== speechGeneration) return;
+    try{ URL.revokeObjectURL(currentUrl); }catch(e){ /* ignore */ }
+    idx++;
+    if(idx >= parts.length || !nextPromise){ finish(); return; }
+    let blob = await nextPromise;
+    if(myGen !== speechGeneration) return;
+    if(blob instanceof Error){
+      try{ blob = await fetchPart(idx); }
+      catch(e){ console.error('tts part failed', idx, e); finish(); return; }
+      if(myGen !== speechGeneration) return;
+    }
+    nextPromise = (idx + 1 < parts.length) ? fetchPart(idx + 1).catch(e => e) : null;
+    currentUrl = URL.createObjectURL(blob);
+    audio.src = currentUrl;
+    applyTtsRate(audio);
+    currentAudio = audio;
+    try{ await audio.play(); }
+    catch(e){ console.error('tts part play failed', e); finish(); }
+  });
+  currentAudio = audio;
+  await audio.play();
+  return audio;
 }
 /**
  * Speaks text using Azure or ElevenLabs if configured (chosen by the saved provider),
@@ -6741,22 +7121,22 @@ async function speakSmart(text, opts){
   // بقى مصدر واحد لزيادة الجيل (جوه stopAllSpeech) بدل ما يتكرر هنا كمان.
   stopAllSpeech();
   const myGen = speechGeneration;
-  text = stripFormattingForSpeech(text);
+  const legacyText = stripFormattingForSpeech(text); // الصوت اللي اتخزن قبل قاموس النطق
+  text = prepareSpeechText(text);
   const tts = state.ttsSettings || {};
   // provider بيتحفظ صريح من شاشة الإعدادات. لو مش موجود (إعدادات قديمة من قبل
   // إضافة Azure)، بنستنتجه من المفاتيح المحفوظة بنفس المنطق القديم.
   const provider = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
 
-  if(provider === 'azure' && tts.azureKey && tts.azureRegion){
+  // تخزين الصوت (stce-tts-cache): لو صوت النص ده محفوظ، يتشغّل من المخزن من غير
+  // ما يتخصم رصيد. أي فشل هنا = نكمّل بالطريقة القديمة تحت بالظبط.
+  const cacheResult = await tryPlayFromTtsCache(text, provider, tts, myGen, legacyText);
+  if(cacheResult.handled) return cacheResult.player;
+
+  if(provider === 'azure'){
     try{
       const azureVoiceName = (state.lang === 'en') ? (tts.azureVoiceEn || DEFAULT_AZURE_VOICE_EN) : (tts.azureVoice || DEFAULT_AZURE_VOICE);
-      const blob = await fetchAzureSpeechAudio(text, tts.azureKey, tts.azureRegion, azureVoiceName);
-      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
-      const url = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.volume = 1;
-      await currentAudio.play();
-      return currentAudio;
+      return await playTtsProgressive('azure', text, azureVoiceName, myGen);
     }catch(e){
       if(myGen !== speechGeneration) return null;
       console.error('Azure TTS failed, falling back to browser voice', e);
@@ -6768,15 +7148,9 @@ async function speakSmart(text, opts){
     }
   }
 
-  if(provider === 'elevenlabs' && tts.apiKey){
+  if(provider === 'elevenlabs'){
     try{
-      const blob = await fetchElevenLabsAudio(text, tts.apiKey, tts.voiceId || DEFAULT_VOICE_ID);
-      if(myGen !== speechGeneration) return null; // a newer speech request started while we were fetching - discard this one
-      const url = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.volume = 1;
-      await currentAudio.play();
-      return currentAudio;
+      return await playTtsProgressive('elevenlabs', text, tts.voiceId || DEFAULT_VOICE_ID, myGen);
     }catch(e){
       if(myGen !== speechGeneration) return null;
       console.error('ElevenLabs TTS failed, falling back to browser voice', e);
@@ -6791,6 +7165,464 @@ async function speakSmart(text, opts){
   if(myGen !== speechGeneration) return null;
   return speakBrowser(text, opts);
 }
+
+/* ============================================================================
+   تخزين صوت الوحدات (stce-tts-cache) — إضافة جديدة بالكامل
+   ==========================================================================
+   الفكرة: صوت شرح كل وحدة بيتولّد مرة واحدة بس (بزرار للأدمن في شاشة
+   "⚙️ صوت AI")، ويتحفظ في Cloudflare KV عن طريق Worker منفصل. بعد كده أي
+   متدرب يسمع الشرح بيتشغّل له الملف المحفوظ، من غير ما يتخصم أي رصيد من
+   Azure أو ElevenLabs.
+   - القراءة (GET) مفتوحة، والحفظ محتاج كلمة سر الأدمن (ttsCacheToken) اللي
+     بتتخزن في platform/adminSettings المحمي (Super Admin بس)، ومش مكتوبة في
+     الكود ده خالص.
+   - أي فشل في المخزن (نت، Worker واقف، ملف مش موجود) = المنصة بتكمّل بنفس
+     الطريقة القديمة بالظبط، من غير أي رسالة للمتدرب.
+   - البصمة (key) = SHA-256 للنص بعد التنظيف + المزوّد + اسم الصوت + اللغة،
+     فلو النص أو الصوت اتغيّر، بيتولّد صوت جديد تلقائي.
+   ============================================================================ */
+const TTS_CACHE_URL = 'https://stce-tts-cache.abeersalah415.workers.dev';
+const TTS_CACHE_READ_TIMEOUT_MS = 3500;
+
+function ttsCacheVoiceFor(tts, provider, lang){
+  if(provider === 'azure') return (lang === 'en') ? (tts.azureVoiceEn || DEFAULT_AZURE_VOICE_EN) : (tts.azureVoice || DEFAULT_AZURE_VOICE);
+  if(provider === 'elevenlabs') return tts.voiceId || DEFAULT_VOICE_ID;
+  return '';
+}
+
+async function ttsCacheKey(text, provider, voice, lang){
+  const data = new TextEncoder().encode(['stce-tts-v2', provider, voice, lang, text].join('|'));
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// بيرجّع {handled:true, player} لو الصوت اتشغّل من المخزن (أو لو طلب أحدث
+// سبقه)، أو {handled:false} في أي حالة تانية عشان speakSmart تكمّل عادي.
+async function fetchCachedAudio(key){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TTS_CACHE_READ_TIMEOUT_MS);
+  try{
+    const resp = await fetch(`${TTS_CACHE_URL}/a/${key}`, { method: 'GET', signal: ctrl.signal });
+    if(!resp || resp.status !== 200) return null;
+    const blob = await resp.blob();
+    return (blob && blob.size) ? blob : null;
+  }catch(e){ return null; }
+  finally{ clearTimeout(timer); }
+}
+// بيدوّر على الصوت المتخزن بصوت Gemini الأول (لو متظبط)، وبعدين بصوت المصدر
+// الحالي (Azure). الاتنين بيتطلبوا مع بعض عشان مايتأخرش.
+async function tryPlayFromTtsCache(text, provider, tts, myGen, legacyText){
+  try{
+    if(!text || !window.crypto || !crypto.subtle) return { handled: false };
+    const lookups = [];
+    const g = geminiTtsConfig();
+    if(g.voice) lookups.push({ kind: 'gemini', key: await geminiCacheKey(text, g) });
+    if(provider === 'azure' || provider === 'elevenlabs'){
+      const voice = ttsCacheVoiceFor(tts, provider, state.lang);
+      lookups.push({ kind: provider, key: await ttsCacheKey(text, provider, voice, state.lang) });
+      // صوت اتخزن قبل إضافة قاموس النطق: نصه كان من غير تصحيحات، فبصمته مختلفة.
+      if(legacyText && legacyText !== text) lookups.push({ kind: provider, key: await ttsCacheKey(legacyText, provider, voice, state.lang) });
+    }
+    if(!lookups.length) return { handled: false };
+    const blobs = await Promise.all(lookups.map(l => fetchCachedAudio(l.key)));
+    const hit = blobs.findIndex(b => !!b);
+    if(hit < 0) return { handled: false };
+    if(myGen !== speechGeneration) return { handled: true, player: null };
+    const url = URL.createObjectURL(blobs[hit]);
+    currentAudio = new Audio(url);
+    currentAudio.volume = 1;
+    if(lookups[hit].kind === 'gemini'){ try{ currentAudio.playbackRate = 1; }catch(e){} }
+    else applyTtsRate(currentAudio);
+    await currentAudio.play();
+    return { handled: true, player: currentAudio };
+  }catch(e){
+    console.warn('tts cache read skipped', e);
+    return { handled: false };
+  }
+}
+
+// === Gemini TTS (للتخزين) ===
+// Gemini حدوده المجانية صغيرة (حوالي 3 طلبات في الدقيقة و10 في اليوم)، فبيُستخدم
+// للتخزين بس، مش للتشغيل المباشر. الصوت بيرجع WAV كبير، فبنضغطه MP3 على جهاز
+// الأدمن (مكتبة lamejs) قبل ما يتخزن، عشان مساحة المخزن تكفي.
+const GEMINI_TTS_MODEL_TAG = 'gemini-3.8-flash-tts';
+const GEMINI_PART_CHARS = 3000;
+const GEMINI_PAUSE_MS = 22000;
+const DEFAULT_GEMINI_STYLE = 'مدرّب فني مصري ودود بيشرح لطلابه في الورشة، بلهجة مصرية طبيعية وبسرعة هادية';
+function geminiTtsConfig(){
+  const g = state.geminiTts || {};
+  return { voice: typeof g.voice === 'string' ? g.voice : '', style: (typeof g.style === 'string' && g.style.trim()) ? g.style.trim() : DEFAULT_GEMINI_STYLE };
+}
+async function geminiCacheKey(text, g){
+  return ttsCacheKey(text, 'gemini', `${GEMINI_TTS_MODEL_TAG}|${g.voice}|${g.style}`, state.lang);
+}
+function base64ToBytes(b64){
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function findAudioBase64(resp){
+  let found = null;
+  const walk = (o) => {
+    if(!o || typeof o !== 'object') return;
+    if(Array.isArray(o)){ o.forEach(walk); return; }
+    if(o.type === 'audio' && typeof o.data === 'string') found = o.data;
+    if(o.inlineData && typeof o.inlineData.data === 'string') found = o.inlineData.data;
+    Object.keys(o).forEach(k => { if(k !== 'data') walk(o[k]); });
+  };
+  walk(resp);
+  return found;
+}
+function wavToPcm(bytes){
+  const tag = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
+  if(tag !== 'RIFF') return { samples: new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2)), rate: 24000 };
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let rate = 24000, off = 12;
+  while(off + 8 <= bytes.length){
+    const id = String.fromCharCode(bytes[off], bytes[off + 1], bytes[off + 2], bytes[off + 3]);
+    const size = dv.getUint32(off + 4, true);
+    if(id === 'fmt ') rate = dv.getUint32(off + 12, true);
+    if(id === 'data'){
+      const len = Math.min(size, bytes.length - off - 8);
+      const copy = bytes.slice(off + 8, off + 8 + len - (len % 2));
+      return { samples: new Int16Array(copy.buffer), rate };
+    }
+    off += 8 + size + (size % 2);
+  }
+  throw new Error('wav_no_data');
+}
+async function fetchGeminiPcm(text, g){
+  const resp = await fetch(TTS_PROXY_URL + '/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'gemini', text, voice: g.voice, style: g.style })
+  });
+  if(!resp.ok){
+    let code = '';
+    try{ code = (await resp.json()).error || ''; }catch(e){}
+    const err = new Error('Gemini TTS ' + resp.status + (code ? ' - ' + code : ''));
+    err.status = resp.status; err.code = code;
+    throw err;
+  }
+  const data = await resp.json();
+  const b64 = findAudioBase64(data);
+  if(!b64) throw new Error('gemini_no_audio');
+  return wavToPcm(base64ToBytes(b64));
+}
+let lameLoading = null;
+const LAME_URLS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js',
+  'https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js'
+];
+function loadScriptOnce(src){
+  return new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = src;
+    sc.onload = () => resolve();
+    sc.onerror = () => reject(new Error('load_failed ' + src));
+    document.head.appendChild(sc);
+  });
+}
+function loadLame(){
+  if(window.lamejs) return Promise.resolve(window.lamejs);
+  if(!lameLoading) lameLoading = (async () => {
+    for(const u of LAME_URLS){
+      try{ await loadScriptOnce(u); if(window.lamejs) return window.lamejs; }catch(e){ console.warn(e); }
+    }
+    lameLoading = null;
+    throw new Error('lame_load_failed');
+  })();
+  return lameLoading;
+}
+async function pcmToMp3(samples, rate){
+  const lame = await loadLame();
+  const enc = new lame.Mp3Encoder(1, rate, 48);
+  const out = [];
+  const block = 1152;
+  for(let i = 0; i < samples.length; i += block){
+    const buf = enc.encodeBuffer(samples.subarray(i, i + block));
+    if(buf.length) out.push(new Uint8Array(buf));
+    if(i % (block * 400) === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  const end = enc.flush();
+  if(end.length) out.push(new Uint8Array(end));
+  return new Blob(out, { type: 'audio/mpeg' });
+}
+// أجزاء Gemini اللي اتولّدت بتتحفظ على جهاز الأدمن (IndexedDB) أول ما تخلص، عشان
+// لو الحد اليومي خلص في نص وحدة، بكرة نكمّل من الجزء اللي بعده بدل ما نعيد اللي اتعمل.
+function partsDb(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('stce-gemini-parts', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('parts');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function partGet(key){
+  try{
+    const db = await partsDb();
+    return await new Promise((resolve) => {
+      const r = db.transaction('parts').objectStore('parts').get(key);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    });
+  }catch(e){ return null; }
+}
+async function partPut(key, blob){
+  try{
+    const db = await partsDb();
+    await new Promise((resolve) => {
+      const tx = db.transaction('parts', 'readwrite');
+      tx.objectStore('parts').put(blob, key);
+      tx.oncomplete = resolve; tx.onerror = resolve;
+    });
+  }catch(e){ console.warn('part save skipped', e); }
+}
+async function partDel(keys){
+  try{
+    const db = await partsDb();
+    const tx = db.transaction('parts', 'readwrite');
+    keys.forEach(k => tx.objectStore('parts').delete(k));
+  }catch(e){ /* ignore */ }
+}
+let lastGeminiRequestAt = 0;
+async function generateGeminiAudio(text, g, onPart){
+  const parts = splitSpeechText(text, GEMINI_PART_CHARS);
+  const blobs = [], keys = [];
+  let requests = 0;
+  for(let i = 0; i < parts.length; i++){
+    if(onPart) onPart(i + 1, parts.length);
+    const pk = await ttsCacheKey(parts[i], 'gemini-part', `${GEMINI_TTS_MODEL_TAG}|${g.voice}|${g.style}`, state.lang);
+    keys.push(pk);
+    let mp3 = await partGet(pk);
+    if(!mp3){
+      const wait = GEMINI_PAUSE_MS - (Date.now() - lastGeminiRequestAt);
+      if(lastGeminiRequestAt && wait > 0) await new Promise(r => setTimeout(r, wait));
+      lastGeminiRequestAt = Date.now();
+      const pcm = await fetchGeminiPcm(parts[i], g);
+      requests++;
+      mp3 = await pcmToMp3(pcm.samples, pcm.rate);
+      await partPut(pk, mp3);
+    }
+    blobs.push(mp3);
+  }
+  return { blob: new Blob(blobs, { type: 'audio/mpeg' }), requests, partKeys: keys };
+}
+
+// ===== جهة الأدمن: كلمة سر المخزن + توليد صوت برنامج كامل =====
+
+async function getTtsCacheToken(){
+  if(!state.isSuperAdmin) return null;
+  if(state.ttsCacheToken) return state.ttsCacheToken;
+  try{
+    const snap = await getDoc(doc(trainerDb, 'platform', 'adminSettings'));
+    const t = snap.exists() ? (snap.data().ttsCacheToken || '') : '';
+    if(t){ state.ttsCacheToken = t; return t; }
+  }catch(e){ console.error('read ttsCacheToken failed', e); }
+  return null;
+}
+
+async function saveTtsCacheToken(token){
+  await setDoc(doc(trainerDb, 'platform', 'adminSettings'), { ttsCacheToken: token }, { merge: true });
+  state.ttsCacheToken = token;
+}
+
+async function ttsCacheExists(key){
+  try{
+    const r = await fetch(`${TTS_CACHE_URL}/a/${key}`, { method: 'HEAD' });
+    return r.status === 200;
+  }catch(e){ return false; }
+}
+
+async function ttsCachePut(key, blob, label, token){
+  const r = await fetch(`${TTS_CACHE_URL}/a/${key}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'audio/mpeg',
+      'X-Label': encodeURIComponent(String(label || '').slice(0, 100))
+    },
+    body: blob
+  });
+  if(!r.ok){
+    let err = '';
+    try{ err = (await r.json()).error || ''; }catch(e){}
+    const e2 = new Error('cache_put_failed_' + r.status + (err ? '_' + err : ''));
+    e2.status = r.status;
+    e2.code = err;
+    throw e2;
+  }
+}
+
+// تقسيم الشرح الطويل بقى جوه سيرفر الصوت (stce-tts-proxy) نفسه.
+function fillTtsCacheProgramSelect(){
+  const sel = document.getElementById('ttsCacheProgramSelect');
+  if(!sel) return;
+  const list = (state.programs || []).filter(p => (p.language || 'ar') === state.lang);
+  sel.innerHTML = list.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.title)} (${(p.modules || []).length})</option>`).join('');
+}
+
+async function generateTtsCacheForProgram(){
+  const statusEl = document.getElementById('ttsCacheStatus');
+  const btn = document.getElementById('ttsCacheGenerateBtn');
+  const say = (msg) => { if(statusEl) statusEl.textContent = msg; };
+  if(!state.isSuperAdmin){ say('الأداة دي متاحة لحساب STCE (Super Admin) بس.'); return; }
+
+  const tts = state.ttsSettings || {};
+  const srcSel = document.getElementById('ttsCacheSource');
+  const useGemini = !!srcSel && srcSel.value === 'gemini';
+  const g = geminiTtsConfig();
+  const provider = useGemini ? 'gemini' : (tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser')));
+  if(useGemini && !g.voice){ say('اختاري صوت Gemini ودوسي «حفظ إعدادات Gemini» الأول.'); return; }
+  if(provider !== 'azure' && provider !== 'elevenlabs' && provider !== 'gemini'){ say('اختاري Azure أو ElevenLabs كمصدر صوت واحفظي الأول. صوت المتصفح مش بيتخزن.'); return; }
+
+  const pid = document.getElementById('ttsCacheProgramSelect').value;
+  const p = (state.programs || []).find(x => x.id === pid);
+  if(!p){ say('اختاري برنامج.'); return; }
+
+  let token = await getTtsCacheToken();
+  if(!token){
+    const entered = (window.prompt('أول مرة بس: الصقي كلمة سر المخزن (ADMIN_TOKEN اللي حطيناها في Cloudflare). هتتحفظ في الإعدادات المحمية.') || '').trim();
+    if(!entered){ say('تم الإلغاء.'); return; }
+    try{ await saveTtsCacheToken(entered); token = entered; }
+    catch(e){ console.error(e); say('ماقدرتش أحفظ كلمة السر في الإعدادات المحمية. اتأكدي إنك داخلة بحساب STCE.'); return; }
+  }
+
+  const voice = useGemini ? '' : ttsCacheVoiceFor(tts, provider, state.lang);
+  const modules = p.modules || [];
+  let saved = 0, skipped = 0, failed = 0, bytes = 0, lastErr = '', lastPrevErr = '', geminiRequests = 0, quotaHit = false;
+  if(btn) btn.disabled = true;
+  try{
+    for(let i = 0; i < modules.length; i++){
+      const m = modules[i];
+      const mTitle = localized(m.title, state.lang);
+      say(`(${i + 1}/${modules.length}) ${mTitle}…`);
+      let stage = 'script';
+      try{
+        // لو سكريبت الشرح فشل يتولّد، بنسيب الوحدة دي من غير تخزين (المتدرب
+        // ساعتها هيتولّد له سكريبت جديد بنص مختلف، فالتخزين مش هيفيد).
+        const scriptText = await getLectureScript(m);
+        const text = prepareSpeechText(scriptText);
+        if(!text || !text.trim()){ skipped++; continue; }
+        stage = 'key';
+        const key = useGemini ? await geminiCacheKey(text, g) : await ttsCacheKey(text, provider, voice, state.lang);
+        if(await ttsCacheExists(key)){ skipped++; continue; }
+        stage = 'voice';
+        if(useGemini){
+          const gen = await generateGeminiAudio(text, g, (k, n) => say(`(${i + 1}/${modules.length}) ${mTitle}… Gemini جزء ${k} من ${n}`));
+          geminiRequests += gen.requests;
+          stage = 'save';
+          await ttsCachePut(key, gen.blob, `${p.title} / ${mTitle}`, token);
+          await partDel(gen.partKeys);
+          saved++;
+          bytes += gen.blob.size || 0;
+          continue;
+        }
+        const blob = (provider === 'azure')
+          ? await fetchTtsLongViaProxy('azure', text, voice, (k, n) => say(`(${i + 1}/${modules.length}) ${mTitle}… جزء ${k} من ${n}`))
+          : await fetchElevenLabsAudio(text, tts.apiKey, voice);
+        stage = 'save';
+        await ttsCachePut(key, blob, `${p.title} / ${mTitle}`, token);
+        saved++;
+        bytes += blob.size || 0;
+      }catch(e){
+        console.error('tts cache generate failed for module', m && m.id, stage, e);
+        failed++;
+        const stageName = { script: 'سكريبت الشرح', key: 'حساب البصمة', voice: 'توليد الصوت', save: 'الحفظ في المخزن' }[stage] || stage;
+        if(lastErr) lastPrevErr = lastErr;
+        lastErr = `الخطأ عند «${stageName}»: ${String((e && e.message) || e).slice(0, 160)}`;
+        if(e && e.status === 401){
+          state.ttsCacheToken = null;
+          say('كلمة سر المخزن غلط. اتوقف التوليد. جربي تاني والصقي كلمة السر الصح.');
+          try{ await saveTtsCacheToken(''); }catch(e2){}
+          return;
+        }
+        if(e && e.status === 403){ say('المخزن رفض الطلب لأن رابط المنصة مش مطابق لـ ALLOWED_ORIGIN.'); return; }
+        if(useGemini && e && e.status === 429){ quotaHit = true; break; }
+        // مع Gemini: أي خطأ بعد مرحلة السكريبت بيوقف التوليد فورًا، عشان مانضيّعش
+        // باقي طلبات اليوم (10 بس) على نفس الخطأ في كل وحدة.
+        if(useGemini && stage !== 'script'){
+          const mb0 = Math.round(bytes / 1048576 * 10) / 10;
+          say(`اتوقف عند الوحدة ${i + 1} (${mTitle}). اتخزن ${saved} وحدة (${mb0} ميجا). ${lastErr}`);
+          return;
+        }
+      }
+    }
+    const mb = Math.round(bytes / 1048576 * 10) / 10;
+    if(quotaHit){
+      say(`وقفت: خلص حد Gemini المجاني النهارده (10 طلبات في اليوم). اتخزن ${saved} وحدة (${mb} ميجا)، والأجزاء اللي اتولّدت من الوحدة الحالية محفوظة على جهازك` + (failed > 1 ? `، و${failed - 1} وحدة فشلت قبلها` : '') + `. دوسي توليد تاني بكرة على نفس البرنامج وهيكمّل من مكان ما وقف.` + (failed > 1 && lastPrevErr ? ' — ' + lastPrevErr : ''));
+      return;
+    }
+    say(`خلصت: ${saved} وحدة اتخزنت (${mb} ميجا)، ${skipped} كانت محفوظة قبل كده أو فاضية، ${failed} فشلت.` + (lastErr ? ' — ' + lastErr : ''));
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+}
+
+// بيدوّر على اسم الصوت في مكتبة أصوات Gemini (عن طريق سيرفر الصوت، عشان المفتاح
+// مايظهرش) ويرجّع الـ id اللي بيتبعت في طلب التوليد.
+async function resolveGeminiVoice(typed){
+  const r = await fetch(TTS_PROXY_URL + '/gemini-voices?search=' + encodeURIComponent(typed));
+  if(!r.ok) return null;
+  const list = ((await r.json()).voices || []).filter(v => v && v.id);
+  const low = typed.toLowerCase();
+  const exact = list.find(v => String(v.name).toLowerCase() === low || String(v.id).toLowerCase() === low);
+  if(exact) return exact;
+  if(list.length) return { error: 'مالقيتش صوت بالاسم ده بالظبط. أقرب أسماء: ' + list.slice(0, 6).map(v => v.name || v.id).join('، ') };
+  return null;
+}
+(function initGeminiTtsUi(){
+  const openBtn = document.getElementById('voiceSettingsBtn');
+  const src = document.getElementById('ttsCacheSource');
+  const box = document.getElementById('geminiTtsBox');
+  const vSel = document.getElementById('geminiTtsVoice');
+  const st = document.getElementById('geminiTtsStyle');
+  const saveBtn = document.getElementById('geminiTtsSaveBtn');
+  const status = document.getElementById('geminiTtsStatus');
+  const syncBox = () => { if(box && src) box.style.display = src.value === 'gemini' ? 'block' : 'none'; };
+  if(src) src.addEventListener('change', syncBox);
+  if(openBtn) openBtn.addEventListener('click', () => {
+    const g = geminiTtsConfig();
+    if(vSel) vSel.value = (state.geminiTts && state.geminiTts.voiceName) || g.voice || '';
+    if(st) st.value = g.style;
+    syncBox();
+  });
+  if(saveBtn) saveBtn.addEventListener('click', async () => {
+    const typed = vSel ? vSel.value.trim() : '';
+    if(!typed){ if(status) status.textContent = 'اكتبي اسم الصوت الأول.'; return; }
+    saveBtn.disabled = true;
+    if(status) status.textContent = 'بدوّر على الصوت…';
+    let resolved = null;
+    try{ resolved = await resolveGeminiVoice(typed); }
+    catch(e){ console.warn('voice lookup failed', e); }
+    if(resolved && resolved.error){ if(status) status.textContent = resolved.error; saveBtn.disabled = false; return; }
+    const voiceId = (resolved && resolved.id) || typed;
+    const val = { voice: voiceId, voiceName: (resolved && resolved.name) || typed, style: (st && st.value.trim()) ? st.value.trim().slice(0, 300) : DEFAULT_GEMINI_STYLE };
+    try{
+      await setDoc(doc(trainerDb, 'platform', 'config'), { geminiTts: val }, { merge: true });
+      state.geminiTts = val;
+      if(status) status.textContent = `✓ اتحفظ: صوت ${val.voiceName}` + (val.voice !== val.voiceName ? ` (${val.voice})` : '') + '.';
+    }catch(e){
+      console.error('save geminiTts failed', e);
+      if(status) status.textContent = 'ماقدرتش أحفظ. اتأكدي إنك داخلة بحساب STCE.';
+    }finally{ saveBtn.disabled = false; }
+  });
+})();
+
+(function initTtsCacheAdminUi(){
+  const openBtn = document.getElementById('voiceSettingsBtn');
+  if(openBtn) openBtn.addEventListener('click', () => {
+    const box = document.getElementById('ttsCacheSection');
+    if(box) box.style.display = state.isSuperAdmin ? 'block' : 'none';
+    fillTtsCacheProgramSelect();
+    const statusEl = document.getElementById('ttsCacheStatus');
+    if(statusEl) statusEl.textContent = '';
+  });
+  const genBtn = document.getElementById('ttsCacheGenerateBtn');
+  if(genBtn) genBtn.addEventListener('click', generateTtsCacheForProgram);
+})();
+
 
 function isProgramComplete(p){
   if(!p.modules.length) return false;
@@ -7285,6 +8117,7 @@ document.getElementById('voiceSettingsBtn').addEventListener('click', () => {
 
   // مصدر الصوت المختار حاليًا (لو إعدادات قديمة من قبل إضافة Azure، بنستنتجه
   // من المفاتيح المحفوظة بنفس منطق speakSmart)
+  document.getElementById('ttsSpeechRate').value = String(ttsPlaybackRate());
   document.getElementById('ttsProvider').value = tts.provider || (tts.azureKey && tts.azureRegion ? 'azure' : (tts.apiKey ? 'elevenlabs' : 'browser'));
   syncTtsProviderFields();
 
@@ -7315,10 +8148,11 @@ document.getElementById('saveTtsBtn').addEventListener('click', async () => {
   const azureVoiceEn = azurePresetEn === 'custom' ? document.getElementById('azureVoiceNameEn').value.trim() : azurePresetEn;
   state.ttsSettings = {
     provider: document.getElementById('ttsProvider').value,
-    apiKey: document.getElementById('ttsApiKey').value.trim(),
+    apiKey: '',
     voiceId: voiceId,
-    azureKey: document.getElementById('azureApiKey').value.trim(),
-    azureRegion: document.getElementById('azureRegion').value.trim(),
+    rate: Number(document.getElementById('ttsSpeechRate').value) || 0.9,
+    azureKey: '',
+    azureRegion: '',
     azureVoice: azureVoice,
     azureVoiceEn: azureVoiceEn
   };
@@ -7758,6 +8592,1390 @@ window.addEventListener('appinstalled', () => {
     });
   }
 })();
+</script>
+
+<!-- ============== معمل العرض ثلاثي الأبعاد (تجريبي - ROUND 7 PILOT) ==============
+     سكريبت منفصل تمامًا عن باقي المنصة: بيحمّل Three.js من CDN (نسخة محددة
+     وثابتة 0.172.0، زي باقي المكتبات الخارجية في الملف ده)، وبيعرّف بس
+     window.__stce3DLabMount / window.__stce3DLabUnmount. مش بينادي ولا
+     بيستخدم أي دالة أو متغيّر من باقي كود المنصة (state، saveXxx، إلخ)، وما
+     بيتحمّلش ولا بيتنفذش غير لو حد فعلًا فتح صفحة "معمل العرض ثلاثي الأبعاد"
+     (renderLab3D في السكريبت الرئيسي بتاع الصفحة بينادي الدالتين دول بس،
+     ومجرد وجودهم هنا مالوش أي تأثير على أي حاجة تانية في المنصة). -->
+<script type="module">
+  import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.172.0/three.module.min.js';
+
+  let _renderer = null, _scene = null, _camera = null, _animId = null, _resizeHandler = null, _group = null;
+
+  function buildPilotScene(){
+    const scene = new THREE.Scene();
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // تدرّج طبقات بسيط (زي شبكة عصبية) - 4 ثم 5 ثم 3 عُقد، بألوان المنصة
+    const layerCounts = [4, 5, 3];
+    const layerX = [-3, 0, 3];
+    const nodeColor = 0xE8B94A; // --yellow بتاعة هوية المنصة
+    const edgeColor = 0x5A79B8; // لون قريب من --green (اللي هو أزرق فعليًا في اللوحة)
+    const nodeGeo = new THREE.SphereGeometry(0.22, 24, 24);
+    const nodeMat = new THREE.MeshStandardMaterial({ color: nodeColor, emissive: 0x4a3414, roughness: 0.4, metalness: 0.2 });
+
+    const layers = [];
+    layerCounts.forEach((count, li) => {
+      const nodes = [];
+      const spacing = 1.1;
+      const startY = -((count - 1) * spacing) / 2;
+      for(let i = 0; i < count; i++){
+        const mesh = new THREE.Mesh(nodeGeo, nodeMat);
+        mesh.position.set(layerX[li], startY + i * spacing, 0);
+        group.add(mesh);
+        nodes.push(mesh);
+      }
+      layers.push(nodes);
+    });
+
+    const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.55 });
+    for(let li = 0; li < layers.length - 1; li++){
+      layers[li].forEach(a => {
+        layers[li + 1].forEach(b => {
+          const geo = new THREE.BufferGeometry().setFromPoints([a.position, b.position]);
+          group.add(new THREE.Line(geo, edgeMat));
+        });
+      });
+    }
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+    const point = new THREE.PointLight(0xffffff, 1.1);
+    point.position.set(4, 4, 6);
+    scene.add(ambient, point);
+
+    return { scene, group };
+  }
+
+  window.__stce3DLabMount = function(containerEl){
+    if(!containerEl) return;
+    // لو كان شغال أصلاً (مثلاً حد دخل تاني من غير ما يتعمله unmount صح)،
+    // بنوقفه الأول قبل ما نبدأ نسخة جديدة - عشان منفتحش أكتر من renderer.
+    window.__stce3DLabUnmount();
+
+    const width = containerEl.clientWidth || 720;
+    const height = containerEl.clientHeight || 420;
+
+    const { scene, group } = buildPilotScene();
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
+    camera.position.set(0, 0, 9);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height);
+    containerEl.innerHTML = '';
+    containerEl.appendChild(renderer.domElement);
+
+    _renderer = renderer; _scene = scene; _camera = camera; _group = group;
+
+    const animate = () => {
+      _animId = requestAnimationFrame(animate);
+      if(_group) _group.rotation.y += 0.004;
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    _resizeHandler = () => {
+      if(!_renderer || !containerEl.isConnected) return;
+      const w = containerEl.clientWidth || width;
+      const h = containerEl.clientHeight || height;
+      _camera.aspect = w / h;
+      _camera.updateProjectionMatrix();
+      _renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', _resizeHandler);
+  };
+
+  window.__stce3DLabUnmount = function(){
+    if(_animId !== null){ cancelAnimationFrame(_animId); _animId = null; }
+    if(_resizeHandler){ window.removeEventListener('resize', _resizeHandler); _resizeHandler = null; }
+    if(_scene){
+      _scene.traverse(obj => {
+        if(obj.geometry) obj.geometry.dispose();
+        if(obj.material){
+          if(Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+    }
+    if(_renderer){
+      _renderer.dispose();
+      if(_renderer.domElement && _renderer.domElement.parentNode){
+        _renderer.domElement.parentNode.removeChild(_renderer.domElement);
+      }
+    }
+    _renderer = null; _scene = null; _camera = null; _group = null;
+  };
+</script>
+
+<!-- ============== الصوت الحي (تجريبي - ROUND 8 PILOT) ==============
+     سكريبت منفصل تمامًا عن باقي المنصة وعن صوت المنصة الحالي (Azure/
+     ElevenLabs/متصفح) - مفيش أي تعديل على أي كود صوت موجود خالص. بيتواصل مع
+     Worker منفصل تمامًا (stce-gemini-live-proxy، مش stce-gemini-proxy
+     الأساسي) عن طريق WebSocket. بيستخدم الميكروفون بس لما السوبر أدمن يدوس
+     "ابدأ المحادثة الصوتية" وبيوقف تمامًا لما يدوس "إنهاء المحادثة" أو
+     ينتقل لشاشة تانية. لسه تجربة أولى (pilot) محتاجة اختبار حقيقي على خدمة
+     Gemini Live الفعلية قبل ما نعتمد عليها أو نربطها بأي شاشة متدرب. -->
+<script>
+(function(){
+  // ⚠️ لازم تستبدلي القيمة دي برابط الـ Worker الفعلي بتاعك. تلاقيه في
+  // Cloudflare: Workers & Pages → stce-gemini-live-proxy → Overview، شكله
+  // تقريبًا: https://stce-gemini-live-proxy.<اسم-حسابك>.workers.dev
+  const LIVE_VOICE_WORKER_URL = 'https://stce-gemini-live-proxy.abeersalah415.workers.dev/';
+
+  function toWsUrl(url){
+    if(/^https:\/\//i.test(url)) return url.replace(/^https:\/\//i, 'wss://');
+    if(/^http:\/\//i.test(url)) return url.replace(/^http:\/\//i, 'ws://');
+    return url;
+  }
+
+  let ws = null;
+  let audioCtx = null;
+  let micStream = null;
+  let micSource = null;
+  let micProcessor = null;
+  let silentGain = null;
+  let playbackCtx = null;
+  let nextPlaybackTime = 0;
+  let callbacks = null;
+  let active = false;
+
+  function base64FromInt16(int16Arr){
+    const bytes = new Uint8Array(int16Arr.buffer);
+    let binary = '';
+    for(let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  function int16FromBase64(b64){
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Int16Array(bytes.buffer);
+  }
+
+  // تقليل بسيط لمعدل العينات (أقرب عينة) - كفاية لتجربة أولى على الصوت، ممكن
+  // نحسّنها لاحقًا بـ resampling أدق لو احتاج الأمر بعد التجربة الحقيقية.
+  function downsampleTo16k(float32Arr, inputSampleRate){
+    if(!inputSampleRate || inputSampleRate === 16000) return float32Arr;
+    const ratio = inputSampleRate / 16000;
+    const newLength = Math.round(float32Arr.length / ratio);
+    const result = new Float32Array(newLength);
+    for(let i = 0; i < newLength; i++) result[i] = float32Arr[Math.floor(i * ratio)];
+    return result;
+  }
+
+  function floatTo16BitPCM(float32Arr){
+    const out = new Int16Array(float32Arr.length);
+    for(let i = 0; i < float32Arr.length; i++){
+      const s = Math.max(-1, Math.min(1, float32Arr[i]));
+      out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return out;
+  }
+
+  function playIncomingAudio(base64Pcm, sampleRate){
+    try{
+      if(!playbackCtx) playbackCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const int16 = int16FromBase64(base64Pcm);
+      const float32 = new Float32Array(int16.length);
+      for(let i = 0; i < int16.length; i++) float32[i] = int16[i] / 0x8000;
+      const buffer = playbackCtx.createBuffer(1, float32.length, sampleRate || 24000);
+      buffer.copyToChannel(float32, 0);
+      const source = playbackCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(playbackCtx.destination);
+      const now = playbackCtx.currentTime;
+      const startAt = Math.max(now, nextPlaybackTime);
+      source.start(startAt);
+      nextPlaybackTime = startAt + buffer.duration;
+    }catch(e){
+      console.error('livevoice_playback_failed', e);
+    }
+  }
+
+  function handleServerMessage(raw){
+    let msg;
+    try{ msg = JSON.parse(raw); }catch(e){ return; }
+    if(msg.error){
+      console.error('livevoice_server_error', msg.error);
+      if(callbacks) callbacks.onStatus('livevoice_err_connection');
+      return;
+    }
+    if(msg.serverContent){
+      const parts = (msg.serverContent.modelTurn && msg.serverContent.modelTurn.parts) || [];
+      parts.forEach(part => {
+        if(part.inlineData && part.inlineData.data){
+          const mime = part.inlineData.mimeType || '';
+          const rateMatch = /rate=(\d+)/.exec(mime);
+          const rate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+          if(callbacks) callbacks.onStatus('livevoice_status_speaking');
+          playIncomingAudio(part.inlineData.data, rate);
+        }
+        if(part.text && callbacks) callbacks.onTranscript(part.text);
+      });
+      if(msg.serverContent.turnComplete && callbacks && active){
+        callbacks.onStatus('livevoice_status_listening');
+      }
+    }
+  }
+
+  function stopMic(){
+    if(micProcessor){ try{ micProcessor.disconnect(); }catch(e){} micProcessor = null; }
+    if(silentGain){ try{ silentGain.disconnect(); }catch(e){} silentGain = null; }
+    if(micSource){ try{ micSource.disconnect(); }catch(e){} micSource = null; }
+    if(micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if(audioCtx){ try{ audioCtx.close(); }catch(e){} audioCtx = null; }
+  }
+
+  window.__stceLiveVoiceMount = async function(cbs){
+    callbacks = cbs || {};
+    active = true;
+    nextPlaybackTime = 0;
+
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.WebSocket){
+      callbacks.onStatus && callbacks.onStatus('livevoice_err_not_supported');
+      callbacks.onStopped && callbacks.onStopped();
+      active = false;
+      return;
+    }
+
+    callbacks.onStatus && callbacks.onStatus('livevoice_status_connecting');
+
+    try{
+      ws = new WebSocket(toWsUrl(LIVE_VOICE_WORKER_URL));
+    }catch(e){
+      console.error('livevoice_ws_create_failed', e);
+      callbacks.onStatus && callbacks.onStatus('livevoice_err_connection');
+      callbacks.onStopped && callbacks.onStopped();
+      active = false;
+      return;
+    }
+
+    ws.addEventListener('error', (e) => {
+      console.error('livevoice_ws_error', e);
+      if(active) callbacks.onStatus && callbacks.onStatus('livevoice_err_connection');
+    });
+    ws.addEventListener('close', () => {
+      if(active) window.__stceLiveVoiceUnmount();
+    });
+    ws.addEventListener('message', (event) => {
+      if(typeof event.data === 'string') handleServerMessage(event.data);
+    });
+
+    ws.addEventListener('open', async () => {
+      if(!active) return;
+      callbacks.onStatus && callbacks.onStatus('livevoice_status_mic_permission');
+      try{
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+      }catch(e){
+        console.error('livevoice_mic_denied', e);
+        callbacks.onStatus && callbacks.onStatus('livevoice_err_mic_denied');
+        window.__stceLiveVoiceUnmount();
+        return;
+      }
+      if(!active) return; // لو حد دوس إنهاء قبل ما إذن الميكروفون يرجع
+
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      micSource = audioCtx.createMediaStreamSource(micStream);
+      // ScriptProcessorNode قديم (deprecated) بس لسه مدعوم في كل المتصفحات
+      // الحديثة ومناسب لتجربة أولى من غير أدوات بناء (build tools) - ممكن
+      // نرقّيها لاحقًا لـ AudioWorklet لو الميزة دي اتأكد نجاحها واعتمدنا عليها.
+      micProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+      micSource.connect(micProcessor);
+      // لازم نوصّل الـ processor بمكبر الصوت عشان يشتغل في بعض المتصفحات، بس
+      // بنعدي بـ gain = 0 عشان متسمعيش صوتك هو نفسه راجعلك (مفيش صدى/feedback).
+      silentGain = audioCtx.createGain();
+      silentGain.gain.value = 0;
+      micProcessor.connect(silentGain);
+      silentGain.connect(audioCtx.destination);
+
+      micProcessor.onaudioprocess = (e) => {
+        if(!active || !ws || ws.readyState !== WebSocket.OPEN) return;
+        const input = e.inputBuffer.getChannelData(0);
+        const down = downsampleTo16k(input, audioCtx.sampleRate);
+        const pcm16 = floatTo16BitPCM(down);
+        const b64 = base64FromInt16(pcm16);
+        try{
+          // ملحوظة: realtimeInput.mediaChunks صيغة قديمة (deprecated) رفضتها
+          // Gemini فعليًا أثناء الاختبار الحقيقي (كود إغلاق 1007) - الصيغة
+          // الصحيحة الحالية هي realtimeInput.audio مباشرة.
+          ws.send(JSON.stringify({ realtimeInput: { audio: { mimeType: 'audio/pcm;rate=16000', data: b64 } } }));
+        }catch(err){
+          console.error('livevoice_send_failed', err);
+        }
+      };
+
+      callbacks.onStatus && callbacks.onStatus('livevoice_status_listening');
+    });
+  };
+
+  window.__stceLiveVoiceUnmount = function(){
+    const wasActive = active;
+    active = false;
+    stopMic();
+    if(ws){
+      try{ ws.close(1000, 'client_stopped'); }catch(e){}
+      ws = null;
+    }
+    if(playbackCtx){ try{ playbackCtx.close(); }catch(e){} playbackCtx = null; }
+    nextPlaybackTime = 0;
+    if(wasActive && callbacks && callbacks.onStopped) callbacks.onStopped();
+  };
+})();
+</script>
+
+<!-- ============================================================
+  إضافة تجريبية فقط (Pilot, Additive-Only): نماذج 3D لكل وحدة تدريبية
+  (Module 3D Templates). هذا الكود معزول بالكامل عن باقي المنصة:
+  - ما بيعدّلش أي برنامج أو وحدة أو بيانات متدرب موجودة فعليًا.
+  - لو مفيش قالب 3D متطابق مع عنوان الوحدة، النظام بيتصرف بالضبط
+    زي قبل إضافة هذا الكود (الزرار أصلاً ما بيظهرش - شوف التعديل
+    الصغير جوه renderTraineeProgramMain).
+  - ممكن يتوسع تدريجيًا بإضافة أسطر جديدة في MODULE_3D_TEMPLATE_MAP
+    فقط، من غير أي لمس لباقي الكود.
+============================================================ -->
+<script type="module">
+  import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.172.0/three.module.min.js';
+
+  // -------- خريطة: عنوان الوحدة (نص مطابق تمامًا) -> مفتاح القالب --------
+  // القالب التجريبي الأول فقط (مرحلة Pilot لاعتماد الجودة قبل التوسع لباقي الـ48 وحدة):
+  const MODULE_3D_TEMPLATE_MAP = {
+    'تجميع دائرة ميكانيكية كاملة واجراء الكشف عليها للثلاجة المنزلية باب واحد': 'mech-circuit',
+    'تجميع دائرة ميكانيكية كاملة ( ساخن – بارد ) للتكييف الشباك': 'mech-circuit',
+    'فك وتركيب مكونات الدائرة الميكانيكية للثلاجة المنزلية (المكثف، المجفف، الأنبوبة الشععرية، المبخر)': 'mech-circuit',
+    'فك وتركيب الأجزاء الميكانيكية للثلاجة المركبة ذات البابين ديفروست': 'mech-circuit',
+    'تجميع الدائرة الميكانيكية وفحص دائرة الهواء للثلاجة النوفروست': 'mech-circuit',
+    'تجميع الدائرة الميكانيكية للمجمد': 'mech-circuit',
+    'تجميع الدائرة الميكانيكية ودائرة المياه لمبرد المياه': 'mech-circuit',
+    'فك وتركيب الأجزاء الكهربية للثلاجة المنزلية البسيطة': 'elec-parts',
+    'تحديد أطراف الضاغط واختبار صلاحيته للثلاجة المنزلية البسيطة': 'elec-parts',
+    'اختبار صلاحية ( الريليه – الأوفرلوود – الترموستات ) للثلاجة المنزلية باب واحد': 'elec-parts',
+    'توصيل الضاغط بأنواع مختلفة من متممات التبريد (تياري - إلكتروني) للثلاجة المنزلية باب واحد': 'elec-parts',
+    'فك وتغيير وتوصيل وفحص الأجزاء الكهربية للثلاجة المركبة ذات البابين ديفروست': 'elec-parts',
+    'فك وتركيب الأجزاء الكهربية للثلاجة النوفروست': 'elec-parts',
+    'فك وتجميع وتوصيل الدائرة الكهربية (مجمد أفقي) ديفروست': 'elec-parts',
+    'فك وتجميع وتوصيل الدائرة الكهربية (دوائر السوبر) ديفروست': 'elec-parts',
+    'فك وتركيب وفحص الاجزاء الكهربية لمبرد المياه': 'elec-parts',
+    'فك وتركيب الأجزاء الكهربية وفحصها للتكييف الشباك': 'elec-parts',
+    'اجراء عملية التفريغ بالطرق المختلفة للثلاجة المنزلية باب واحد': 'evac-charge',
+    'اجراء عملية الشحن بمركبات التبريد المختلفة للثلاجة المنزلية باب واحد': 'evac-charge',
+    'اجراء عملية التفريغ والشحن للثلاجة المركبة ذات البابين ديفروست': 'evac-charge',
+    'اجراء عملية التفريغ والشحن للثلاجة النوفروست': 'evac-charge',
+    'إجراء عملية التفريغ والشحن للمجمد': 'evac-charge',
+    'إجراء عملية التفريغ والشحن لمبرد المياه': 'evac-charge',
+    'إجراء عملية التفريغ بالطرق المختلفة للتكييف الشباك': 'evac-charge',
+    'إجراء عملية الشحن مع مركب التبريد المناسب للتكييف الشباك': 'evac-charge',
+    'إجراء عملية اللحام نحاس × نحاس (مع شروط السلامة)': 'brazing',
+    'إجراء عملية اللحام نحاس × حديد (مع شروط السلامة)': 'brazing',
+    'فك وتركيب الضاغط ولحام الوصلات للثلاجة المنزلية باب واحد': 'brazing',
+    'توصيل دوائر كهربية بسيطة (مع شروط الأمان من الأخطار الكهربية)': 'electrical-basic',
+    'توصيلات كهربية ( التوالي – التوازي ) واجهزة القياس': 'electrical-basic',
+    'تشكيل مواسير التبريد (حديد – نحاس – ألومنيوم) والقطع': 'pipe-forming',
+    'إجراء عملية السوبدج والفلير في مواسير التبريد': 'swage-flare',
+    'فك وتجميع مكونات الثلاجة (الكاوتش ومفصلات الباب) للثلاجة المنزلية البسيطة': 'door-gasket',
+    'تجميع الدائرة الكهربية وتوصيلها واختبارها للثلاجة المنزلية البسيطة': 'elec-circuit-full',
+    'تجميع دائرة كهربية كاملة وتشغيلها واختبارها لمبرد المياه': 'elec-circuit-full',
+    'تجميع الدائرة الكهربية (ذو بلف عاكس) للتكييف الشباك': 'elec-circuit-full',
+    'تجميع دائرة كهربية (ذو سخان) للتكييف الشباك': 'elec-circuit-full',
+    'حساب كمية الزيت المناسبة وتغيير زيت الضاغط للثلاجة المنزلية باب واحد': 'compressor-oil',
+    'ضغط الدائرة والكشف على التنفيس للثلاجة المركبة ذات البابين ديفروست': 'pressure-leak-test',
+    'علامات الشحنة الكاملة وضبط الضغوط ودرجة الحرارة للثلاجة المركبة ذات البابين ديفروست': 'charge-verification',
+    'فحص واختبار وتوصيل دائرة الاذابة وفحص دائرة الماء للثلاجة النوفروست': 'defrost-water',
+    'توصيل الدائرة الكهربية للنظام الياباني للثلاجة النوفروست': 'control-board',
+    'توصيل الدائرة الكهربية للنظام الأمريكي للثلاجة النوفروست': 'control-board',
+    'اكتشاف الاعطال الكهربية واصلاحها لأجهزة التبريد': 'fault-diagnosis-elec',
+    'اكتشاف الاعطال الميكانيكية واصلاحها لأجهزة التبريد': 'fault-diagnosis-mech',
+    'اجراء عملية الصيانة الدورية للتكييف الشباك': 'maintenance-routine',
+    'الاعطال الكهربية والميكانيكية والاصلاح للتكييف الشباك': 'fault-diagnosis-combo',
+  };
+
+  const TEMPLATE_TITLES = {
+    'mech-circuit':          'الدائرة الميكانيكية الكاملة لجهاز التبريد',
+    'elec-parts':            'المكونات الكهربية الأساسية لجهاز التبريد',
+    'evac-charge':           'عملية التفريغ والشحن بمركبات التبريد',
+    'brazing':               'عملية اللحام (البرازنج) لمواسير التبريد',
+    'electrical-basic':      'دائرة كهربية بسيطة (توالي/توازي) وأجهزة القياس',
+    'pipe-forming':          'تشكيل وقطع مواسير التبريد',
+    'swage-flare':           'عملية السوبدج والفلير',
+    'door-gasket':           'كاوتش ومفصلات باب الثلاجة',
+    'elec-circuit-full':     'الدائرة الكهربية الكاملة المجمّعة والمختبرة',
+    'compressor-oil':        'فحص وتغيير زيت الضاغط',
+    'pressure-leak-test':    'ضغط الدائرة والكشف عن التسريب',
+    'charge-verification':   'التأكد من اكتمال الشحنة وضبط الضغوط والحرارة',
+    'defrost-water':         'دائرة الإذابة ودائرة تصريف المياه',
+    'control-board':         'لوحة التحكم (التايمر) والتوصيلات',
+    'fault-diagnosis-elec':  'تشخيص الأعطال الكهربية',
+    'fault-diagnosis-mech':  'تشخيص الأعطال الميكانيكية',
+    'maintenance-routine':   'الصيانة الدورية للوحدة',
+    'fault-diagnosis-combo': 'تشخيص الأعطال الكهربية والميكانيكية معًا'
+  };
+
+  const TEMPLATE_PARTS = {
+    'mech-circuit': [
+      { key: 'compressor', label: 'الكباس (الموتور)', color: 0x2b2f3a },
+      { key: 'condenser',  label: 'المكثّف (الراديتر الخارجي)', color: 0xB0423A },
+      { key: 'dryer',      label: 'الفلتر المجفف', color: 0x9AA3AF },
+      { key: 'capillary',  label: 'الأنبوبة الشعرية', color: 0xE8B94A },
+      { key: 'evaporator', label: 'المبخر (الفريزر الداخلي)', color: 0x4F8FD9 }
+    ],
+    'elec-parts': [
+      { key: 'compressor',  label: 'الكباس (الموتور)', color: 0x2b2f3a },
+      { key: 'terminalBox', label: 'علبة أطراف التوصيل', color: 0x1f2430 },
+      { key: 'relay',       label: 'ريليه التشغيل', color: 0x3a3a3a },
+      { key: 'overload',    label: 'الأوفرلوود (الواقي الحراري)', color: 0x7a4a2e },
+      { key: 'thermostat',  label: 'الترموستات', color: 0xE8B94A }
+    ],
+    'evac-charge': [
+      { key: 'unit',       label: 'وحدة التبريد (نقطة الخدمة)', color: 0x2b2f3a },
+      { key: 'manifold',   label: 'مجموعة المانيفولد (الجيدج)', color: 0xE9EDF3 },
+      { key: 'vacuumPump', label: 'مضخة التفريغ (الفاكيوم)', color: 0x4a4a4a },
+      { key: 'cylinder',   label: 'اسطوانة غاز التبريد', color: 0xBFD3EE }
+    ],
+    'brazing': [
+      { key: 'pipe1',        label: 'الماسورة الأولى', color: 0xD98C5F },
+      { key: 'pipe2',        label: 'الماسورة الثانية', color: 0xD98C5F },
+      { key: 'torch',        label: 'شعلة اللحام', color: 0x3a3a3a },
+      { key: 'oxygenCyl',    label: 'اسطوانة الأكسجين', color: 0x3E6FB0 },
+      { key: 'acetyleneCyl', label: 'اسطوانة الأسيتيلين', color: 0x8B3A3A }
+    ],
+    'electrical-basic': [
+      { key: 'battery',    label: 'مصدر التغذية (البطارية)', color: 0x2b2f3a },
+      { key: 'switchPart', label: 'المفتاح (السويتش)', color: 0x9AA3AF },
+      { key: 'lamp1',      label: 'المصباح 1', color: 0xE8B94A },
+      { key: 'lamp2',      label: 'المصباح 2', color: 0xE8B94A },
+      { key: 'meter',      label: 'جهاز القياس (أميتر/فولتميتر)', color: 0xE9EDF3 }
+    ],
+    'pipe-forming': [
+      { key: 'rawPipe',  label: 'ماسورة مستقيمة (الخامة)', color: 0xD98C5F },
+      { key: 'bentPipe', label: 'ماسورة بعد التشكيل', color: 0xD98C5F },
+      { key: 'tool',     label: 'أداة تشكيل الانحناء', color: 0x3a3a3a },
+      { key: 'cutter',   label: 'قطّاعة المواسير', color: 0x9AA3AF }
+    ],
+    'swage-flare': [
+      { key: 'pipe',      label: 'الماسورة', color: 0xD98C5F },
+      { key: 'flare',     label: 'نهاية مفلورة (Flare)', color: 0xD98C5F },
+      { key: 'toolBlock', label: 'أداة الفلير والسوبدج', color: 0x3a3a3a },
+      { key: 'punch',     label: 'قلم الفلير', color: 0x9AA3AF }
+    ],
+    'door-gasket': [
+      { key: 'door',   label: 'باب الثلاجة', color: 0xE9EDF3 },
+      { key: 'gasket', label: 'الكاوتش (حلقة السد المطاطية)', color: 0x2b2f3a },
+      { key: 'hinge1', label: 'مفصلة علوية', color: 0x9AA3AF },
+      { key: 'hinge2', label: 'مفصلة سفلية', color: 0x9AA3AF }
+    ],
+    'elec-circuit-full': [
+      { key: 'compressor',  label: 'الكباس (الموتور)', color: 0x2b2f3a },
+      { key: 'terminalBox', label: 'علبة أطراف التوصيل', color: 0x1f2430 },
+      { key: 'relay',       label: 'ريليه التشغيل', color: 0x3a3a3a },
+      { key: 'overload',    label: 'الأوفرلوود', color: 0x7a4a2e },
+      { key: 'thermostat',  label: 'الترموستات', color: 0xE8B94A },
+      { key: 'meter',       label: 'جهاز اختبار الدائرة', color: 0x101828 }
+    ],
+    'compressor-oil': [
+      { key: 'compressor',   label: 'الضاغط', color: 0x2b2f3a },
+      { key: 'oilPlug',      label: 'سدادة الزيت', color: 0x9AA3AF },
+      { key: 'oilContainer', label: 'عبوة الزيت المناسب', color: 0xC9922E }
+    ],
+    'pressure-leak-test': [
+      { key: 'unit',        label: 'وحدة التبريد (تحت الاختبار)', color: 0x2b2f3a },
+      { key: 'nitrogenCyl', label: 'اسطوانة النيتروجين', color: 0x4FA87A },
+      { key: 'gauge',       label: 'مقياس الضغط', color: 0xB0423A },
+      { key: 'leakPoint',   label: 'نقطة فحص التسريب', color: 0xE74C3C }
+    ],
+    'charge-verification': [
+      { key: 'manifold',    label: 'مجموعة الجيدج', color: 0xE9EDF3 },
+      { key: 'gaugeLow',    label: 'عداد الضغط المنخفض', color: 0x3E6FB0 },
+      { key: 'gaugeHigh',   label: 'عداد الضغط العالي', color: 0xB0423A },
+      { key: 'thermometer', label: 'الثرمومتر الرقمي', color: 0x1f2430 },
+      { key: 'suctionLine', label: 'خط الشفط', color: 0xBFD3EE }
+    ],
+    'defrost-water': [
+      { key: 'evaporator', label: 'المبخر', color: 0x4F8FD9 },
+      { key: 'heater',     label: 'عنصر التسخين (الإذابة)', color: 0xE74C3C },
+      { key: 'drainPan',   label: 'طشت الصرف', color: 0x9AA3AF },
+      { key: 'drainTube',  label: 'أنبوبة تصريف المياه', color: 0xBFD3EE }
+    ],
+    'control-board': [
+      { key: 'board',       label: 'لوحة التحكم (التايمر)', color: 0x234d2e },
+      { key: 'terminals',   label: 'أطراف التوصيل', color: 0xE8B94A },
+      { key: 'timerMotor',  label: 'موتور التايمر', color: 0x3a3a3a }
+    ],
+    'fault-diagnosis-elec': [
+      { key: 'compressor',  label: 'الكباس', color: 0x2b2f3a },
+      { key: 'terminalBox', label: 'علبة التوصيل', color: 0x1f2430 },
+      { key: 'overload',    label: 'الأوفرلوود', color: 0x7a4a2e },
+      { key: 'multimeter',  label: 'جهاز الأفوميتر', color: 0x101828 },
+      { key: 'faultMarker', label: 'نقطة العطل المكتشفة', color: 0xE74C3C }
+    ],
+    'fault-diagnosis-mech': [
+      { key: 'condenser',   label: 'المكثّف', color: 0xB0423A },
+      { key: 'capillary',   label: 'الأنبوبة الشعرية', color: 0xE8B94A },
+      { key: 'faultMarker', label: 'نقطة الانسداد/التسريب المكتشفة', color: 0xE74C3C }
+    ],
+    'maintenance-routine': [
+      { key: 'unit',   label: 'الوحدة', color: 0xE9EDF3 },
+      { key: 'filter', label: 'فلتر الهواء', color: 0x9AA3AF },
+      { key: 'coil',   label: 'زعانف الكويل', color: 0x4F8FD9 },
+      { key: 'brush',  label: 'فرشاة التنظيف', color: 0x3a3a3a },
+      { key: 'spray',  label: 'بخاخ التنظيف', color: 0x4FA87A }
+    ],
+    'fault-diagnosis-combo': [
+      { key: 'compressor', label: 'الكباس', color: 0x2b2f3a },
+      { key: 'elecFault',  label: 'نقطة العطل الكهربي', color: 0xE74C3C },
+      { key: 'capillary',  label: 'الأنبوبة الشعرية', color: 0xE8B94A },
+      { key: 'mechFault',  label: 'نقطة العطل الميكانيكي', color: 0xE74C3C }
+    ]
+  };
+
+  window.__stceModule3DGetTemplateKey = function(moduleTitle){
+    try{
+      if(!moduleTitle) return null;
+      return MODULE_3D_TEMPLATE_MAP[String(moduleTitle).trim()] || null;
+    }catch(e){ console.error('module3d_get_key_failed', e); return null; }
+  };
+
+  // -------- حالة العرض (مودال مُنشأ ديناميكيًا - مش موجود في الصفحة الأصلية) --------
+  let overlayEl = null, canvasWrap = null, titleEl = null, legendEl = null, hintEl = null, closeBtn = null;
+  let renderer = null, scene = null, camera = null, group = null, animId = null, resizeHandler = null;
+  let dragState = null, flowParticles = [], pipePaths = [], partMeshes = {};
+  let cleanupPointerListeners = null;
+
+  function ensureOverlay(){
+    if(overlayEl) return;
+    overlayEl = document.createElement('div');
+    overlayEl.id = 'module3DOverlay';
+    overlayEl.style.cssText = 'position:fixed;inset:0;background:rgba(10,14,26,.84);z-index:9999;display:none;align-items:center;justify-content:center;padding:18px;';
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:#101828;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:920px;width:100%;max-height:92vh;overflow:auto;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);';
+
+    titleEl = document.createElement('h3');
+    titleEl.style.cssText = 'color:#fff;margin:0 0 8px;font-size:18px;';
+
+    hintEl = document.createElement('div');
+    hintEl.textContent = 'اسحب بالماوس أو بإصبعك لتدوير الموديل، ودوس على اسم أي قطعة تحت علشان تتعرف عليها في الموديل.';
+    hintEl.style.cssText = 'color:#9AA3AF;font-size:13px;margin-bottom:10px;';
+
+    canvasWrap = document.createElement('div');
+    canvasWrap.style.cssText = 'width:100%;height:420px;border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 20%,#1b2742,#0b1120);position:relative;touch-action:none;';
+
+    legendEl = document.createElement('div');
+    legendEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;';
+
+    closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'إغلاق';
+    closeBtn.style.cssText = 'margin-top:16px;background:#E8B94A;color:#16213E;border:none;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer;';
+    closeBtn.addEventListener('click', () => window.__stceModule3DClose());
+
+    // زرار إغلاق ثابت وظاهر دايمًا فوق (مش محتاج سحب لتحت علشان تشوفيه) - إضافة لحل مشكلة الموبايل
+    const topCloseBtn = document.createElement('button');
+    topCloseBtn.type = 'button';
+    topCloseBtn.textContent = '✕';
+    topCloseBtn.setAttribute('aria-label', 'إغلاق');
+    topCloseBtn.style.cssText = 'position:absolute;top:10px;left:10px;z-index:2;background:rgba(16,24,40,.9);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:50%;width:38px;height:38px;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+    topCloseBtn.addEventListener('click', () => window.__stceModule3DClose());
+
+    panel.appendChild(titleEl);
+    panel.appendChild(hintEl);
+    panel.appendChild(canvasWrap);
+    panel.appendChild(legendEl);
+    panel.appendChild(closeBtn);
+    overlayEl.appendChild(topCloseBtn);
+    overlayEl.appendChild(panel);
+    overlayEl.addEventListener('click', (e) => { if(e.target === overlayEl) window.__stceModule3DClose(); });
+    document.body.appendChild(overlayEl);
+
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && overlayEl.style.display !== 'none') window.__stceModule3DClose();
+    });
+  }
+
+  function makeTubeBetween(a, b, radius, color, bend){
+    const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+    mid.y += (bend || 0);
+    const curve = new THREE.CatmullRomCurve3([a, mid, b]);
+    const geo = new THREE.TubeGeometry(curve, 24, radius, 8, false);
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: .5, metalness: .3 });
+    return { mesh: new THREE.Mesh(geo, mat), curve };
+  }
+
+  // -------- أدوات مساعدة مختصرة لبناء القوالب الإضافية بسرعة واتساق بصري --------
+  function mk(geo, color, pos, opts){
+    opts = opts || {};
+    const mat = new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .45, metalness: .4 }, opts.mat || {}));
+    const mesh = new THREE.Mesh(geo, mat);
+    if(pos) mesh.position.set(pos[0], pos[1], pos[2]);
+    if(opts.rot) mesh.rotation.set(opts.rot[0] || 0, opts.rot[1] || 0, opts.rot[2] || 0);
+    if(opts.scale) mesh.scale.set(opts.scale[0] || 1, opts.scale[1] || 1, opts.scale[2] || 1);
+    return mesh;
+  }
+  function mkBox(w, h, d, color, pos, opts){ return mk(new THREE.BoxGeometry(w, h, d), color, pos, opts); }
+  function mkCyl(r1, r2, len, color, pos, opts){ return mk(new THREE.CylinderGeometry(r1, r2, len, 20), color, pos, opts); }
+  function stdLights(scene){
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const p1 = new THREE.PointLight(0xffffff, 1.2); p1.position.set(4, 5, 6);
+    const p2 = new THREE.PointLight(0xffffff, 0.5); p2.position.set(-4, -2, 4);
+    scene.add(p1, p2);
+  }
+  function newGroup(scene){
+    const group = new THREE.Group();
+    scene.add(group);
+    partMeshes = {}; pipePaths = []; flowParticles = [];
+    return group;
+  }
+
+  function buildMechCircuitScene(){
+    const scene = new THREE.Scene();
+    const group = new THREE.Group();
+    scene.add(group);
+    partMeshes = {};
+    pipePaths = [];
+
+    // الكباس (الموتور)
+    const compMat = new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 });
+    const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.9, 24), compMat);
+    const compTop = new THREE.Mesh(new THREE.SphereGeometry(0.75, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), compMat);
+    compTop.position.y = 0.45;
+    const compressor = new THREE.Group();
+    compressor.add(compBody, compTop);
+    compressor.position.set(2.2, -1.4, 0);
+    group.add(compressor);
+    partMeshes.compressor = compressor;
+
+    // المكثّف (خارجي) - زجزاج أفقي
+    const condenser = new THREE.Group();
+    const condMat = new THREE.MeshStandardMaterial({ color: 0xB0423A, roughness: .5, metalness: .4 });
+    for(let i = 0; i < 5; i++){
+      const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.0, 8), condMat);
+      seg.rotation.z = Math.PI / 2;
+      seg.position.set(2.2, 1.6 - i * 0.28, 0);
+      condenser.add(seg);
+    }
+    group.add(condenser);
+    partMeshes.condenser = condenser;
+
+    // الفلتر المجفف
+    const dryer = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.55, 16), new THREE.MeshStandardMaterial({ color: 0x9AA3AF, roughness: .4, metalness: .5 }));
+    dryer.rotation.z = Math.PI / 2;
+    dryer.position.set(0.9, 0.35, 0);
+    group.add(dryer);
+    partMeshes.dryer = dryer;
+
+    // الأنبوبة الشعرية - هيليكس صغير
+    const capPts = [];
+    for(let i = 0; i <= 40; i++){
+      const t = i / 40, ang = t * Math.PI * 6;
+      capPts.push(new THREE.Vector3(Math.cos(ang) * 0.22, 0.05 - t * 0.4, Math.sin(ang) * 0.22));
+    }
+    const capGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(capPts), 80, 0.025, 6, false);
+    const capillary = new THREE.Mesh(capGeo, new THREE.MeshStandardMaterial({ color: 0xE8B94A, roughness: .4, metalness: .5 }));
+    capillary.position.set(-0.2, 0.1, 0);
+    group.add(capillary);
+    partMeshes.capillary = capillary;
+
+    // المبخر (داخلي) - زجزاج + زعانف
+    const evaporator = new THREE.Group();
+    const evapMat = new THREE.MeshStandardMaterial({ color: 0x4F8FD9, roughness: .5, metalness: .4 });
+    const finMat = new THREE.MeshStandardMaterial({ color: 0xBFD3EE, roughness: .6, metalness: .1, transparent: true, opacity: .55 });
+    for(let i = 0; i < 6; i++){
+      const y = -0.3 - i * 0.26;
+      const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.8, 8), evapMat);
+      seg.rotation.z = Math.PI / 2;
+      seg.position.set(-1.9, y, 0);
+      evaporator.add(seg);
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.02, 0.5), finMat);
+      fin.position.set(-1.9, y, 0);
+      evaporator.add(fin);
+    }
+    group.add(evaporator);
+    partMeshes.evaporator = evaporator;
+
+    // الأنابيب الموصلة (تمثل اتجاه سريان الفريون في الدائرة بالكامل)
+    const pipeColor = 0x6B7280;
+    [
+      [new THREE.Vector3(2.2, -1.0, 0), new THREE.Vector3(2.2, 1.6, 0), 0.3],
+      [new THREE.Vector3(2.2, 0.6, 0), new THREE.Vector3(0.9, 0.6, 0), 0.2],
+      [new THREE.Vector3(0.9, 0.1, 0), new THREE.Vector3(-0.2, 0.1, 0), -0.15],
+      [new THREE.Vector3(-0.2, -0.3, 0), new THREE.Vector3(-1.9, -0.3, 0), -0.2],
+      [new THREE.Vector3(-1.9, -1.6, 0), new THREE.Vector3(2.2, -1.6, 0), -0.9]
+    ].forEach(([a, b, bend]) => {
+      const p = makeTubeBetween(a, b, 0.045, pipeColor, bend);
+      group.add(p.mesh);
+      pipePaths.push(p.curve);
+    });
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const point = new THREE.PointLight(0xffffff, 1.2); point.position.set(4, 5, 6);
+    const point2 = new THREE.PointLight(0xffffff, 0.5); point2.position.set(-4, -2, 4);
+    scene.add(point, point2);
+
+    // جزيئات متحركة تمثل سريان الفريون داخل الدائرة
+    flowParticles = [];
+    const particleGeo = new THREE.SphereGeometry(0.06, 8, 8);
+    const particleMat = new THREE.MeshBasicMaterial({ color: 0xFFE9A8 });
+    pipePaths.forEach((curve, i) => {
+      const mesh = new THREE.Mesh(particleGeo, particleMat);
+      group.add(mesh);
+      flowParticles.push({ mesh, pathIndex: i, t: i / pipePaths.length });
+    });
+
+    return { scene, group };
+  }
+
+  function buildElecPartsScene(){
+    const scene = new THREE.Scene();
+    const group = new THREE.Group();
+    scene.add(group);
+    partMeshes = {}; pipePaths = []; flowParticles = [];
+
+    // الكباس (بنفس طراز قالب الدائرة الميكانيكية للتناسق البصري بين القوالب)
+    const compMat = new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 });
+    const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.9, 24), compMat);
+    const compTop = new THREE.Mesh(new THREE.SphereGeometry(0.75, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), compMat);
+    compTop.position.y = 0.45;
+    const compressor = new THREE.Group();
+    compressor.add(compBody, compTop);
+    compressor.position.set(1.6, -1.2, 0);
+    group.add(compressor);
+    partMeshes.compressor = compressor;
+
+    // علبة أطراف التوصيل
+    const terminalBox = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.35), new THREE.MeshStandardMaterial({ color: 0x1f2430, roughness: .5, metalness: .4 }));
+    terminalBox.position.set(1.85, -0.25, 0.55);
+    group.add(terminalBox);
+    partMeshes.terminalBox = terminalBox;
+
+    // ريليه التشغيل
+    const relay = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.45, 16), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: .5, metalness: .5 }));
+    relay.rotation.z = Math.PI / 2;
+    relay.position.set(0.9, 0.5, 0.4);
+    group.add(relay);
+    partMeshes.relay = relay;
+
+    // الأوفرلوود (الواقي الحراري)
+    const overload = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0x7a4a2e, roughness: .6, metalness: .3 }));
+    overload.scale.set(1, 0.7, 1);
+    overload.position.set(0.9, -0.15, 0.4);
+    group.add(overload);
+    partMeshes.overload = overload;
+
+    // الترموستات + كبسولة الاستشعار المتصلة بأنبوبة شعرية رفيعة
+    const thermostat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.3), new THREE.MeshStandardMaterial({ color: 0xE8B94A, roughness: .4, metalness: .3 }));
+    thermostat.position.set(-1.6, 1.1, 0);
+    group.add(thermostat);
+    partMeshes.thermostat = thermostat;
+
+    const sensorBulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshStandardMaterial({ color: 0xE8B94A, roughness: .4, metalness: .3 }));
+    sensorBulb.position.set(-1.8, -0.9, 0);
+    group.add(sensorBulb);
+    const sensorTube = makeTubeBetween(new THREE.Vector3(-1.6, 0.95, 0), new THREE.Vector3(-1.8, -0.8, 0), 0.025, 0xE8B94A, -0.2);
+    group.add(sensorTube.mesh);
+
+    // أسلاك التوصيل الملونة
+    [
+      [new THREE.Vector3(1.85, -0.1, 0.55), new THREE.Vector3(0.9, 0.45, 0.4), 0xD9767D],
+      [new THREE.Vector3(1.85, -0.35, 0.55), new THREE.Vector3(0.9, -0.1, 0.4), 0x2b2f3a],
+      [new THREE.Vector3(1.6, -0.25, 0.55), new THREE.Vector3(-1.6, 1.0, 0), 0xE8B94A]
+    ].forEach(([a, b, color]) => {
+      const w = makeTubeBetween(a, b, 0.03, color, 0.4);
+      group.add(w.mesh);
+    });
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const point = new THREE.PointLight(0xffffff, 1.2); point.position.set(4, 5, 6);
+    const point2 = new THREE.PointLight(0xffffff, 0.5); point2.position.set(-4, -2, 4);
+    scene.add(point, point2);
+
+    return { scene, group };
+  }
+
+  function buildEvacChargeScene(){
+    const scene = new THREE.Scene();
+    const group = new THREE.Group();
+    scene.add(group);
+    partMeshes = {}; pipePaths = []; flowParticles = [];
+
+    // نقطة الخدمة على وحدة التبريد (تمثيل مبسط للوحدة)
+    const unit = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 0.9), new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 }));
+    unit.position.set(2.3, -0.8, 0);
+    group.add(unit);
+    partMeshes.unit = unit;
+    const servicePort = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.25, 12), new THREE.MeshStandardMaterial({ color: 0x9AA3AF, metalness: .6, roughness: .4 }));
+    servicePort.rotation.z = Math.PI / 2;
+    servicePort.position.set(1.65, -0.6, 0);
+    group.add(servicePort);
+
+    // مجموعة المانيفولد (الجيدج) بعدادين منخفض/عالي
+    const manifoldBody = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.25), new THREE.MeshStandardMaterial({ color: 0xE9EDF3, roughness: .4, metalness: .2 }));
+    manifoldBody.position.set(0, 0.5, 0);
+    group.add(manifoldBody);
+    partMeshes.manifold = manifoldBody;
+    const gaugeLow = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 20), new THREE.MeshStandardMaterial({ color: 0x3E6FB0, roughness: .3, metalness: .4 }));
+    gaugeLow.rotation.x = Math.PI / 2;
+    gaugeLow.position.set(-0.3, 0.5, 0.05);
+    group.add(gaugeLow);
+    const gaugeHigh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 20), new THREE.MeshStandardMaterial({ color: 0xB0423A, roughness: .3, metalness: .4 }));
+    gaugeHigh.rotation.x = Math.PI / 2;
+    gaugeHigh.position.set(0.3, 0.5, 0.05);
+    group.add(gaugeHigh);
+
+    // مضخة التفريغ (الفاكيوم)
+    const pumpBody = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x4a4a4a, roughness: .5, metalness: .5 }));
+    pumpBody.rotation.z = Math.PI / 2;
+    pumpBody.position.set(-2.3, -1.1, 0);
+    group.add(pumpBody);
+    partMeshes.vacuumPump = pumpBody;
+    const pumpMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.5, 16), new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 }));
+    pumpMotor.rotation.z = Math.PI / 2;
+    pumpMotor.position.set(-2.3, -0.55, 0);
+    group.add(pumpMotor);
+
+    // اسطوانة غاز التبريد
+    const cylBody = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.5, 24), new THREE.MeshStandardMaterial({ color: 0xBFD3EE, roughness: .4, metalness: .3 }));
+    cylBody.position.set(2.1, 1.0, 0);
+    group.add(cylBody);
+    partMeshes.cylinder = cylBody;
+    const cylTop = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 0.3, 16), new THREE.MeshStandardMaterial({ color: 0x4F8FD9, roughness: .4, metalness: .4 }));
+    cylTop.position.set(2.1, 1.9, 0);
+    group.add(cylTop);
+
+    // خراطيم التوصيل الملونة (منخفض / عالي / مركزي)
+    const hLow = makeTubeBetween(new THREE.Vector3(-0.3, 0.3, 0), new THREE.Vector3(-2.2, -0.85, 0), 0.04, 0x3E6FB0, -0.3);
+    const hHigh = makeTubeBetween(new THREE.Vector3(0.3, 0.3, 0), new THREE.Vector3(1.65, -0.6, 0), 0.04, 0xB0423A, -0.2);
+    const hCenter = makeTubeBetween(new THREE.Vector3(0, 0.75, 0), new THREE.Vector3(2.1, 1.0, 0), 0.04, 0xE8B94A, 0.3);
+    [hLow, hHigh, hCenter].forEach(h => group.add(h.mesh));
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const point = new THREE.PointLight(0xffffff, 1.2); point.position.set(4, 5, 6);
+    const point2 = new THREE.PointLight(0xffffff, 0.5); point2.position.set(-4, -2, 4);
+    scene.add(point, point2);
+
+    return { scene, group };
+  }
+
+  function buildBrazingScene(){
+    const scene = new THREE.Scene();
+    const group = new THREE.Group();
+    scene.add(group);
+    partMeshes = {}; pipePaths = []; flowParticles = [];
+
+    const pipeMat1 = new THREE.MeshStandardMaterial({ color: 0xD98C5F, roughness: .35, metalness: .7 });
+    const pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.0, 20), pipeMat1);
+    pipe1.rotation.z = Math.PI / 2;
+    pipe1.position.set(-1.0, 0, 0);
+    group.add(pipe1);
+    partMeshes.pipe1 = pipe1;
+
+    const pipeMat2 = new THREE.MeshStandardMaterial({ color: 0xD98C5F, roughness: .35, metalness: .7 });
+    const pipe2 = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.0, 20), pipeMat2);
+    pipe2.rotation.z = Math.PI / 2;
+    pipe2.position.set(1.0, 0, 0);
+    group.add(pipe2);
+    partMeshes.pipe2 = pipe2;
+
+    // شعلة اللحام (رأس الشعلة + اللهب المضيء)
+    const torchNozzle = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.35, 16), new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: .4, metalness: .6 }));
+    torchNozzle.rotation.x = Math.PI;
+    torchNozzle.position.set(0, -0.55, 0);
+    group.add(torchNozzle);
+    partMeshes.torch = torchNozzle;
+
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 16), new THREE.MeshBasicMaterial({ color: 0xFF8A3D }));
+    flame.position.set(0, -0.15, 0);
+    group.add(flame);
+    partMeshes.flame = flame;
+    const flameLight = new THREE.PointLight(0xFF8A3D, 1.5, 3);
+    flameLight.position.set(0, 0, 0);
+    group.add(flameLight);
+
+    // اسطوانتا الغاز (أكسجين / أسيتيلين)
+    const oxyCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 1.3, 20), new THREE.MeshStandardMaterial({ color: 0x3E6FB0, roughness: .4, metalness: .4 }));
+    oxyCyl.position.set(-2.1, -1.1, 0);
+    group.add(oxyCyl);
+    partMeshes.oxygenCyl = oxyCyl;
+
+    const acetCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 1.3, 20), new THREE.MeshStandardMaterial({ color: 0x8B3A3A, roughness: .4, metalness: .4 }));
+    acetCyl.position.set(-1.5, -1.1, 0);
+    group.add(acetCyl);
+    partMeshes.acetyleneCyl = acetCyl;
+
+    const h1 = makeTubeBetween(new THREE.Vector3(-2.1, -0.45, 0), new THREE.Vector3(-0.15, -0.6, 0.1), 0.03, 0x3E6FB0, 0.3);
+    const h2 = makeTubeBetween(new THREE.Vector3(-1.5, -0.45, 0), new THREE.Vector3(0.15, -0.6, -0.1), 0.03, 0x8B3A3A, 0.3);
+    [h1, h2].forEach(h => group.add(h.mesh));
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const point = new THREE.PointLight(0xffffff, 1.0); point.position.set(4, 5, 6);
+    scene.add(point);
+
+    return { scene, group };
+  }
+
+  function buildElectricalBasicScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    group.add(mkBox(3.4, 0.08, 1.6, 0x1b2740, [0, -1.3, 0]));
+    const battery = mkBox(0.5, 0.3, 0.3, 0x2b2f3a, [-1.3, -1.0, 0]);
+    group.add(battery); partMeshes.battery = battery;
+    const switchPart = mkCyl(0.1, 0.1, 0.35, 0x9AA3AF, [-0.55, -1.0, 0], { rot: [0, 0, Math.PI / 2] });
+    group.add(switchPart); partMeshes.switchPart = switchPart;
+    const lamp1 = mk(new THREE.SphereGeometry(0.18, 16, 16), 0xE8B94A, [0.2, -1.0, 0], { mat: { emissive: 0x7a5c1a, emissiveIntensity: .8 } });
+    group.add(lamp1); partMeshes.lamp1 = lamp1;
+    const lamp2 = mk(new THREE.SphereGeometry(0.18, 16, 16), 0xE8B94A, [1.0, -1.0, 0], { mat: { emissive: 0x7a5c1a, emissiveIntensity: .8 } });
+    group.add(lamp2); partMeshes.lamp2 = lamp2;
+    const meter = mkBox(0.4, 0.3, 0.15, 0xE9EDF3, [1.6, -0.6, 0.3]);
+    group.add(meter); partMeshes.meter = meter;
+    [
+      [[-1.3, -0.85, 0], [-0.55, -0.85, 0]],
+      [[-0.55, -0.85, 0], [0.2, -0.85, 0]],
+      [[0.2, -0.85, 0], [1.0, -0.85, 0]],
+      [[1.0, -0.85, 0], [1.6, -0.6, 0.15]],
+      [[1.6, -0.6, 0.45], [-1.3, -1.15, 0]]
+    ].forEach(([a, b]) => group.add(makeTubeBetween(new THREE.Vector3(...a), new THREE.Vector3(...b), 0.025, 0x2b2f3a, 0.15).mesh));
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildPipeFormingScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const rawPipe = mkCyl(0.1, 0.1, 1.8, 0xD98C5F, [-1.6, 0, 0], { rot: [0, 0, Math.PI / 2] });
+    group.add(rawPipe); partMeshes.rawPipe = rawPipe;
+    const bentCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0.6, 0.9, 0), new THREE.Vector3(0.6, 0, 0), new THREE.Vector3(1.5, -0.8, 0)]);
+    const bentPipe = new THREE.Mesh(new THREE.TubeGeometry(bentCurve, 32, 0.1, 10, false), new THREE.MeshStandardMaterial({ color: 0xD98C5F, roughness: .35, metalness: .6 }));
+    group.add(bentPipe); partMeshes.bentPipe = bentPipe;
+    const tool = mkBox(0.6, 0.5, 0.3, 0x3a3a3a, [0.1, 0.9, 0]);
+    group.add(tool); partMeshes.tool = tool;
+    const cutter = mkCyl(0.25, 0.25, 0.08, 0x9AA3AF, [-1.6, -0.8, 0], { rot: [Math.PI / 2, 0, 0] });
+    group.add(cutter); partMeshes.cutter = cutter;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildSwageFlareScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const pipe = mkCyl(0.12, 0.12, 1.4, 0xD98C5F, [-0.5, 0, 0], { rot: [0, 0, Math.PI / 2] });
+    group.add(pipe); partMeshes.pipe = pipe;
+    const flare = mk(new THREE.ConeGeometry(0.28, 0.3, 20), 0xD98C5F, [0.3, 0, 0], { rot: [0, 0, -Math.PI / 2], mat: { roughness: .35, metalness: .6 } });
+    group.add(flare); partMeshes.flare = flare;
+    const toolBlock = mkBox(0.7, 0.5, 0.5, 0x3a3a3a, [0.9, 0, 0]);
+    group.add(toolBlock); partMeshes.toolBlock = toolBlock;
+    const punch = mkCyl(0.08, 0.2, 0.4, 0x9AA3AF, [0.9, 0.4, 0]);
+    group.add(punch); partMeshes.punch = punch;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildDoorGasketScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const door = mkBox(1.4, 2.0, 0.15, 0xE9EDF3, [0, 0, 0]);
+    group.add(door); partMeshes.door = door;
+    const gasket = mk(new THREE.TorusGeometry(0.75, 0.08, 12, 4), 0x2b2f3a, [0, 0, 0.12], { scale: [1, 1.35, 1], rot: [0, 0, Math.PI / 4] });
+    group.add(gasket); partMeshes.gasket = gasket;
+    const hinge1 = mkCyl(0.08, 0.08, 0.3, 0x9AA3AF, [-0.75, 0.85, 0.12], { rot: [Math.PI / 2, 0, 0] });
+    group.add(hinge1); partMeshes.hinge1 = hinge1;
+    const hinge2 = mkCyl(0.08, 0.08, 0.3, 0x9AA3AF, [-0.75, -0.85, 0.12], { rot: [Math.PI / 2, 0, 0] });
+    group.add(hinge2); partMeshes.hinge2 = hinge2;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildElecCircuitFullScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const compMat = new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 });
+    const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.85, 24), compMat);
+    const compTop = new THREE.Mesh(new THREE.SphereGeometry(0.7, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), compMat);
+    compTop.position.y = 0.42;
+    const compressor = new THREE.Group(); compressor.add(compBody, compTop);
+    compressor.position.set(1.5, -1.1, 0);
+    group.add(compressor); partMeshes.compressor = compressor;
+    const terminalBox = mkBox(0.5, 0.38, 0.3, 0x1f2430, [1.75, -0.3, 0.5]);
+    group.add(terminalBox); partMeshes.terminalBox = terminalBox;
+    const relay = mkCyl(0.2, 0.2, 0.4, 0x3a3a3a, [0.85, 0.4, 0.4], { rot: [0, 0, Math.PI / 2] });
+    group.add(relay); partMeshes.relay = relay;
+    const overload = mk(new THREE.SphereGeometry(0.18, 16, 16), 0x7a4a2e, [0.85, -0.2, 0.4], { scale: [1, .7, 1] });
+    group.add(overload); partMeshes.overload = overload;
+    const thermostat = mkBox(0.45, 0.3, 0.28, 0xE8B94A, [-1.4, 0.9, 0]);
+    group.add(thermostat); partMeshes.thermostat = thermostat;
+    const meter = mkBox(0.35, 0.5, 0.1, 0x101828, [-1.6, -0.6, 0.4]);
+    group.add(meter); partMeshes.meter = meter;
+    [
+      [[1.75, -0.1, 0.5], [0.85, 0.35, 0.4], 0xD9767D],
+      [[0.85, 0.2, 0.4], [0.85, -0.1, 0.4], 0xD9767D],
+      [[0.85, -0.38, 0.4], [1.6, -0.4, 0.5], 0x2b2f3a],
+      [[1.5, -0.25, 0.5], [-1.4, 0.8, 0], 0xE8B94A],
+      [[-1.4, 0.75, 0], [-1.6, -0.4, 0.4], 0x2b2f3a]
+    ].forEach(([a, b, c]) => group.add(makeTubeBetween(new THREE.Vector3(...a), new THREE.Vector3(...b), 0.03, c, 0.3).mesh));
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildCompressorOilScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const compMat = new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 });
+    const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.9, 24), compMat);
+    const compTop = new THREE.Mesh(new THREE.SphereGeometry(0.75, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), compMat);
+    compTop.position.y = 0.45;
+    const compressor = new THREE.Group(); compressor.add(compBody, compTop);
+    compressor.position.set(0, -0.3, 0);
+    group.add(compressor); partMeshes.compressor = compressor;
+    const oilPlug = mkCyl(0.12, 0.12, 0.12, 0x9AA3AF, [0.6, -0.7, 0.5]);
+    group.add(oilPlug); partMeshes.oilPlug = oilPlug;
+    const oilContainer = mkCyl(0.22, 0.22, 0.6, 0xC9922E, [-1.6, 0.2, 0]);
+    group.add(oilContainer); partMeshes.oilContainer = oilContainer;
+    group.add(mkCyl(0.1, 0.1, 0.1, 0x3a3a3a, [-1.6, 0.55, 0]));
+    group.add(makeTubeBetween(new THREE.Vector3(-1.4, 0.3, 0), new THREE.Vector3(0.6, -0.6, 0.5), 0.03, 0xC9922E, -0.3).mesh);
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildPressureLeakScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const unit = mkBox(1.2, 0.9, 0.9, 0x2b2f3a, [1.8, -0.6, 0]);
+    group.add(unit); partMeshes.unit = unit;
+    const nitroCyl = mkCyl(0.3, 0.3, 1.4, 0x4FA87A, [-1.8, -0.6, 0]);
+    group.add(nitroCyl); partMeshes.nitrogenCyl = nitroCyl;
+    const gauge = mkCyl(0.22, 0.22, 0.08, 0xB0423A, [-0.2, 0.5, 0], { rot: [Math.PI / 2, 0, 0] });
+    group.add(gauge); partMeshes.gauge = gauge;
+    const leakPoint = mk(new THREE.SphereGeometry(0.1, 16, 16), 0xE74C3C, [1.0, -0.6, 0.45], { mat: { emissive: 0x8a1c10, emissiveIntensity: .9 } });
+    group.add(leakPoint); partMeshes.leakPoint = leakPoint;
+    group.add(makeTubeBetween(new THREE.Vector3(-0.2, 0.25, 0), new THREE.Vector3(-1.7, -0.3, 0), 0.03, 0x4FA87A, -0.2).mesh);
+    group.add(makeTubeBetween(new THREE.Vector3(-0.2, 0.25, 0), new THREE.Vector3(1.2, -0.4, 0.3), 0.03, 0xB0423A, -0.1).mesh);
+    for(let i = 0; i < 3; i++){
+      const bubble = mk(new THREE.SphereGeometry(0.035, 8, 8), 0x8FD3F4, [1.0 + i * 0.08, -0.4 + i * 0.12, 0.5], { mat: { transparent: true, opacity: .6 } });
+      group.add(bubble);
+    }
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildChargeVerificationScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const manifoldBody = mkBox(0.55, 0.55, 0.25, 0xE9EDF3, [0, 0.5, 0]);
+    group.add(manifoldBody); partMeshes.manifold = manifoldBody;
+    const gaugeLow = mkCyl(0.22, 0.22, 0.08, 0x3E6FB0, [-0.3, 0.5, 0.05], { rot: [Math.PI / 2, 0, 0] });
+    group.add(gaugeLow); partMeshes.gaugeLow = gaugeLow;
+    const gaugeHigh = mkCyl(0.22, 0.22, 0.08, 0xB0423A, [0.3, 0.5, 0.05], { rot: [Math.PI / 2, 0, 0] });
+    group.add(gaugeHigh); partMeshes.gaugeHigh = gaugeHigh;
+    const thermoClamp = mkBox(0.3, 0.2, 0.2, 0x1f2430, [-1.6, -0.4, 0]);
+    group.add(thermoClamp); partMeshes.thermometer = thermoClamp;
+    const suctionLine = mkCyl(0.1, 0.1, 1.6, 0xBFD3EE, [-1.6, 0.1, 0], { rot: [0, 0, Math.PI / 2], mat: { roughness: .3, metalness: .2 } });
+    group.add(suctionLine); partMeshes.suctionLine = suctionLine;
+    group.add(makeTubeBetween(new THREE.Vector3(-0.3, 0.3, 0), new THREE.Vector3(-1.6, -0.3, 0), 0.03, 0x3E6FB0, -0.2).mesh);
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildDefrostWaterScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    for(let i = 0; i < 5; i++){
+      const seg = mkCyl(0.05, 0.05, 1.6, 0x4F8FD9, [0, 1.2 - i * 0.3, 0], { rot: [0, 0, Math.PI / 2] });
+      group.add(seg);
+      if(i === 0) partMeshes.evaporator = seg;
+    }
+    const heater = mkCyl(0.04, 0.04, 1.6, 0xE74C3C, [0, 0.1, 0.15], { rot: [0, 0, Math.PI / 2], mat: { emissive: 0x7a140c, emissiveIntensity: .6 } });
+    group.add(heater); partMeshes.heater = heater;
+    const drainPan = mkBox(1.8, 0.08, 0.6, 0x9AA3AF, [0, -1.1, 0]);
+    group.add(drainPan); partMeshes.drainPan = drainPan;
+    const drainTube = mkCyl(0.06, 0.06, 0.9, 0xBFD3EE, [-0.9, -1.5, 0], { rot: [0, 0, Math.PI / 2.3] });
+    group.add(drainTube); partMeshes.drainTube = drainTube;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildControlBoardScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const board = mkBox(1.6, 1.0, 0.08, 0x234d2e, [0, 0, 0]);
+    group.add(board); partMeshes.board = board;
+    const terminals = mkBox(1.2, 0.12, 0.1, 0xE8B94A, [0, -0.55, 0.1]);
+    group.add(terminals); partMeshes.terminals = terminals;
+    const timerMotor = mkCyl(0.18, 0.18, 0.3, 0x3a3a3a, [0.9, 0.3, 0.2], { rot: [Math.PI / 2, 0, 0] });
+    group.add(timerMotor); partMeshes.timerMotor = timerMotor;
+    const harnessColors = [0xD9767D, 0x2b2f3a, 0xE8B94A, 0x3E6FB0];
+    harnessColors.forEach((c, i) => {
+      group.add(makeTubeBetween(new THREE.Vector3(-0.6 + i * 0.4, -0.6, 0.1), new THREE.Vector3(-1.6, -1.2 + i * 0.15, 0), 0.025, c, -0.2).mesh);
+    });
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildFaultDiagnosisElecScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const compMat = new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 });
+    const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.85, 24), compMat);
+    const compTop = new THREE.Mesh(new THREE.SphereGeometry(0.7, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), compMat);
+    compTop.position.y = 0.42;
+    const compressor = new THREE.Group(); compressor.add(compBody, compTop);
+    compressor.position.set(1.2, -1.0, 0);
+    group.add(compressor); partMeshes.compressor = compressor;
+    const terminalBox = mkBox(0.5, 0.38, 0.3, 0x1f2430, [1.45, -0.2, 0.5]);
+    group.add(terminalBox); partMeshes.terminalBox = terminalBox;
+    const overload = mk(new THREE.SphereGeometry(0.18, 16, 16), 0x7a4a2e, [0.6, -0.1, 0.4], { scale: [1, .7, 1] });
+    group.add(overload); partMeshes.overload = overload;
+    const multimeter = mkBox(0.4, 0.55, 0.12, 0x101828, [-1.3, -0.4, 0.3]);
+    group.add(multimeter); partMeshes.multimeter = multimeter;
+    const faultMarker = mk(new THREE.SphereGeometry(0.1, 16, 16), 0xE74C3C, [0.6, -0.1, 0.55], { mat: { emissive: 0x8a1c10, emissiveIntensity: .9 } });
+    group.add(faultMarker); partMeshes.faultMarker = faultMarker;
+    group.add(makeTubeBetween(new THREE.Vector3(-1.1, -0.25, 0.3), new THREE.Vector3(0.55, -0.15, 0.4), 0.02, 0xD9767D, -0.1).mesh);
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildFaultDiagnosisMechScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const condenser = new THREE.Group();
+    for(let i = 0; i < 4; i++){
+      const seg = mkCyl(0.05, 0.05, 1.6, 0xB0423A, [0.3, 1.0 - i * 0.28, 0], { rot: [0, 0, Math.PI / 2] });
+      condenser.add(seg);
+    }
+    group.add(condenser); partMeshes.condenser = condenser;
+    const capPts = [];
+    for(let i = 0; i <= 40; i++){ const t = i / 40, ang = t * Math.PI * 6; capPts.push(new THREE.Vector3(Math.cos(ang) * 0.2 - 1.2, 0 - t * 0.35, Math.sin(ang) * 0.2)); }
+    const capillary = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(capPts), 70, 0.022, 6, false), new THREE.MeshStandardMaterial({ color: 0xE8B94A, roughness: .4, metalness: .5 }));
+    group.add(capillary); partMeshes.capillary = capillary;
+    const faultMarker = mk(new THREE.SphereGeometry(0.1, 16, 16), 0xE74C3C, [-1.2, -0.2, 0.25], { mat: { emissive: 0x8a1c10, emissiveIntensity: .9 } });
+    group.add(faultMarker); partMeshes.faultMarker = faultMarker;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildMaintenanceRoutineScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const unit = mkBox(1.6, 1.0, 0.6, 0xE9EDF3, [0, 0, 0]);
+    group.add(unit); partMeshes.unit = unit;
+    const filter = mkBox(1.3, 0.7, 0.06, 0x9AA3AF, [0, 0, 0.35], { mat: { transparent: true, opacity: .75 } });
+    group.add(filter); partMeshes.filter = filter;
+    const coil = mkBox(1.3, 0.1, 0.5, 0x4F8FD9, [0, -0.65, 0]);
+    group.add(coil); partMeshes.coil = coil;
+    const brush = mkCyl(0.05, 0.05, 0.9, 0x3a3a3a, [1.4, 0.2, 0.4], { rot: [0, 0, Math.PI / 3] });
+    group.add(brush); partMeshes.brush = brush;
+    const spray = mkCyl(0.18, 0.18, 0.5, 0x4FA87A, [-1.6, -0.2, 0.4]);
+    group.add(spray); partMeshes.spray = spray;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildFaultDiagnosisComboScene(){
+    const scene = new THREE.Scene();
+    const group = newGroup(scene);
+    const compMat = new THREE.MeshStandardMaterial({ color: 0x2b2f3a, roughness: .4, metalness: .6 });
+    const compBody = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.75, 24), compMat);
+    const compTop = new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), compMat);
+    compTop.position.y = 0.38;
+    const compressor = new THREE.Group(); compressor.add(compBody, compTop);
+    compressor.position.set(1.4, -1.0, 0);
+    group.add(compressor); partMeshes.compressor = compressor;
+    const elecFault = mk(new THREE.SphereGeometry(0.09, 16, 16), 0xE74C3C, [1.75, -0.55, 0.4], { mat: { emissive: 0x8a1c10, emissiveIntensity: .9 } });
+    group.add(elecFault); partMeshes.elecFault = elecFault;
+    const capPts = [];
+    for(let i = 0; i <= 40; i++){ const t = i / 40, ang = t * Math.PI * 6; capPts.push(new THREE.Vector3(Math.cos(ang) * 0.2 - 1.3, 0.4 - t * 0.35, Math.sin(ang) * 0.2)); }
+    const capillary = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(capPts), 70, 0.022, 6, false), new THREE.MeshStandardMaterial({ color: 0xE8B94A, roughness: .4, metalness: .5 }));
+    group.add(capillary); partMeshes.capillary = capillary;
+    const mechFault = mk(new THREE.SphereGeometry(0.09, 16, 16), 0xE74C3C, [-1.3, 0.05, 0.25], { mat: { emissive: 0x8a1c10, emissiveIntensity: .9 } });
+    group.add(mechFault); partMeshes.mechFault = mechFault;
+    stdLights(scene);
+    return { scene, group };
+  }
+
+  function buildScene(templateKey){
+    const builders = {
+      'mech-circuit': buildMechCircuitScene,
+      'elec-parts': buildElecPartsScene,
+      'evac-charge': buildEvacChargeScene,
+      'brazing': buildBrazingScene,
+      'electrical-basic': buildElectricalBasicScene,
+      'pipe-forming': buildPipeFormingScene,
+      'swage-flare': buildSwageFlareScene,
+      'door-gasket': buildDoorGasketScene,
+      'elec-circuit-full': buildElecCircuitFullScene,
+      'compressor-oil': buildCompressorOilScene,
+      'pressure-leak-test': buildPressureLeakScene,
+      'charge-verification': buildChargeVerificationScene,
+      'defrost-water': buildDefrostWaterScene,
+      'control-board': buildControlBoardScene,
+      'fault-diagnosis-elec': buildFaultDiagnosisElecScene,
+      'fault-diagnosis-mech': buildFaultDiagnosisMechScene,
+      'maintenance-routine': buildMaintenanceRoutineScene,
+      'fault-diagnosis-combo': buildFaultDiagnosisComboScene
+    };
+    const fn = builders[templateKey] || buildMechCircuitScene;
+    return fn();
+  }
+
+  function setEmissiveRecursive(obj, hex, intensity){
+    obj.traverse(o => {
+      if(o.isMesh && o.material && 'emissive' in o.material){
+        o.material.emissive = new THREE.Color(hex);
+        if('emissiveIntensity' in o.material) o.material.emissiveIntensity = intensity;
+      }
+    });
+  }
+  function highlightPart(key){
+    const mesh = partMeshes[key];
+    if(!mesh) return;
+    setEmissiveRecursive(mesh, 0xE8B94A, 0.8);
+    setTimeout(() => setEmissiveRecursive(mesh, 0x000000, 0), 900);
+  }
+
+  function pointerPos(e){
+    return e.touches && e.touches[0] ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+  }
+
+  function mountScene(templateKey){
+    unmountScene();
+    const width = canvasWrap.clientWidth || 860;
+    const height = canvasWrap.clientHeight || 420;
+    const built = buildScene(templateKey);
+    scene = built.scene; group = built.group;
+
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 0, 8.5);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height);
+    canvasWrap.innerHTML = '';
+    canvasWrap.appendChild(renderer.domElement);
+
+    const labelsLayer = document.createElement('div');
+    labelsLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+    canvasWrap.appendChild(labelsLayer);
+
+    const parts = TEMPLATE_PARTS[templateKey] || [];
+    const labelEls = {};
+    parts.forEach(part => {
+      const lbl = document.createElement('div');
+      lbl.textContent = part.label;
+      lbl.style.cssText = 'position:absolute;transform:translate(-50%,-50%);background:rgba(16,24,40,.75);color:#fff;font-size:11px;padding:3px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.18);white-space:nowrap;';
+      labelsLayer.appendChild(lbl);
+      labelEls[part.key] = lbl;
+    });
+
+    legendEl.innerHTML = '';
+    parts.forEach(part => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.textContent = part.label;
+      const hex = '#' + part.color.toString(16).padStart(6, '0');
+      chip.style.cssText = `background:rgba(255,255,255,.06);border:1px solid ${hex};color:#fff;border-radius:999px;padding:6px 14px;font-size:12px;cursor:pointer;`;
+      chip.addEventListener('click', () => highlightPart(part.key));
+      legendEl.appendChild(chip);
+    });
+
+    dragState = { down: false, lastX: 0, lastY: 0, rotY: 0.4, rotX: -0.1 };
+    let autoRotate = true;
+    const onDown = (e) => { dragState.down = true; autoRotate = false; const p = pointerPos(e); dragState.lastX = p.x; dragState.lastY = p.y; };
+    const onMove = (e) => {
+      if(!dragState.down) return;
+      const p = pointerPos(e);
+      dragState.rotY += (p.x - dragState.lastX) * 0.008;
+      dragState.rotX += (p.y - dragState.lastY) * 0.008;
+      dragState.rotX = Math.max(-0.8, Math.min(0.8, dragState.rotX));
+      dragState.lastX = p.x; dragState.lastY = p.y;
+    };
+    const onUp = () => { dragState.down = false; };
+    renderer.domElement.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    renderer.domElement.addEventListener('touchstart', onDown, { passive: true });
+    renderer.domElement.addEventListener('touchmove', onMove, { passive: true });
+    renderer.domElement.addEventListener('touchend', onUp, { passive: true });
+    cleanupPointerListeners = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+
+    const animate = () => {
+      animId = requestAnimationFrame(animate);
+      if(autoRotate) dragState.rotY += 0.0025;
+      group.rotation.y = dragState.rotY;
+      group.rotation.x = dragState.rotX;
+
+      flowParticles.forEach(fp => {
+        fp.t += 0.0035;
+        if(fp.t > 1) fp.t = 0;
+        const curve = pipePaths[fp.pathIndex];
+        if(curve) fp.mesh.position.copy(curve.getPointAt(fp.t));
+      });
+
+      renderer.render(scene, camera);
+
+      const wp = new THREE.Vector3();
+      parts.forEach(part => {
+        const mesh = partMeshes[part.key];
+        const lbl = labelEls[part.key];
+        if(mesh && lbl){
+          mesh.getWorldPosition(wp);
+          const proj = wp.clone().project(camera);
+          lbl.style.left = ((proj.x * 0.5 + 0.5) * canvasWrap.clientWidth) + 'px';
+          lbl.style.top = ((-proj.y * 0.5 + 0.5) * canvasWrap.clientHeight) + 'px';
+        }
+      });
+    };
+    animate();
+
+    resizeHandler = () => {
+      if(!renderer || !canvasWrap.isConnected) return;
+      const w = canvasWrap.clientWidth || width, h = canvasWrap.clientHeight || height;
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', resizeHandler);
+  }
+
+  function unmountScene(){
+    if(animId !== null){ cancelAnimationFrame(animId); animId = null; }
+    if(resizeHandler){ window.removeEventListener('resize', resizeHandler); resizeHandler = null; }
+    if(cleanupPointerListeners){ cleanupPointerListeners(); cleanupPointerListeners = null; }
+    if(scene){
+      scene.traverse(obj => {
+        if(obj.geometry) obj.geometry.dispose();
+        if(obj.material){
+          if(Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+    }
+    if(renderer){
+      renderer.dispose();
+      if(renderer.domElement && renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
+    renderer = null; scene = null; camera = null; group = null;
+    flowParticles = []; pipePaths = []; partMeshes = {};
+  }
+
+  window.__stceModule3DOpen = function(templateKey, moduleTitle){
+    try{
+      ensureOverlay();
+      overlayEl.style.display = 'flex';
+      titleEl.textContent = (moduleTitle ? moduleTitle + ' — ' : '') + (TEMPLATE_TITLES[templateKey] || 'موديل 3D');
+      mountScene(templateKey);
+    }catch(e){ console.error('module3d_open_failed', e); }
+  };
+
+  window.__stceModule3DClose = function(){
+    try{
+      if(overlayEl) overlayEl.style.display = 'none';
+      unmountScene();
+    }catch(e){ console.error('module3d_close_failed', e); }
+  };
 </script>
 </body>
 </html>
