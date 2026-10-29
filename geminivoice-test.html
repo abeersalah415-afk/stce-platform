@@ -7121,6 +7121,7 @@ async function speakSmart(text, opts){
   // بقى مصدر واحد لزيادة الجيل (جوه stopAllSpeech) بدل ما يتكرر هنا كمان.
   stopAllSpeech();
   const myGen = speechGeneration;
+  const legacyText = stripFormattingForSpeech(text); // الصوت اللي اتخزن قبل قاموس النطق
   text = prepareSpeechText(text);
   const tts = state.ttsSettings || {};
   // provider بيتحفظ صريح من شاشة الإعدادات. لو مش موجود (إعدادات قديمة من قبل
@@ -7129,7 +7130,7 @@ async function speakSmart(text, opts){
 
   // تخزين الصوت (stce-tts-cache): لو صوت النص ده محفوظ، يتشغّل من المخزن من غير
   // ما يتخصم رصيد. أي فشل هنا = نكمّل بالطريقة القديمة تحت بالظبط.
-  const cacheResult = await tryPlayFromTtsCache(text, provider, tts, myGen);
+  const cacheResult = await tryPlayFromTtsCache(text, provider, tts, myGen, legacyText);
   if(cacheResult.handled) return cacheResult.player;
 
   if(provider === 'azure'){
@@ -7210,7 +7211,7 @@ async function fetchCachedAudio(key){
 }
 // بيدوّر على الصوت المتخزن بصوت Gemini الأول (لو متظبط)، وبعدين بصوت المصدر
 // الحالي (Azure). الاتنين بيتطلبوا مع بعض عشان مايتأخرش.
-async function tryPlayFromTtsCache(text, provider, tts, myGen){
+async function tryPlayFromTtsCache(text, provider, tts, myGen, legacyText){
   try{
     if(!text || !window.crypto || !crypto.subtle) return { handled: false };
     const lookups = [];
@@ -7219,6 +7220,8 @@ async function tryPlayFromTtsCache(text, provider, tts, myGen){
     if(provider === 'azure' || provider === 'elevenlabs'){
       const voice = ttsCacheVoiceFor(tts, provider, state.lang);
       lookups.push({ kind: provider, key: await ttsCacheKey(text, provider, voice, state.lang) });
+      // صوت اتخزن قبل إضافة قاموس النطق: نصه كان من غير تصحيحات، فبصمته مختلفة.
+      if(legacyText && legacyText !== text) lookups.push({ kind: provider, key: await ttsCacheKey(legacyText, provider, voice, state.lang) });
     }
     if(!lookups.length) return { handled: false };
     const blobs = await Promise.all(lookups.map(l => fetchCachedAudio(l.key)));
